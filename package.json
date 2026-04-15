@@ -8,7 +8,11 @@
     "start": "next start"
   },
   "dependencies": {
+    "@prisma/client": "^6.19.3",
+    "@serwist/next": "^9.5.7",
+    "@serwist/sw": "^9.5.7",
     "next": "16.2.3",
+    "prisma": "^6.19.3",
     "react": "19.2.4",
     "react-dom": "19.2.4"
   }

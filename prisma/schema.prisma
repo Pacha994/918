@@ -1,0 +1,100 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["multiSchema"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  schemas  = ["app918"]
+}
+
+model Taller {
+  id        String   @id @default(cuid())
+  nombre    String
+  whatsapp  String   @unique
+  servicios Json     @default("[]")
+  creadoEn  DateTime @default(now())
+  clientes  Cliente[]
+  bicis     Bici[]
+  @@schema("app918")
+}
+
+model Cliente {
+  id       String @id @default(cuid())
+  nombre   String
+  whatsapp String
+  tallerId String
+  taller   Taller @relation(fields: [tallerId], references: [id])
+  bicis    Bici[]
+  @@unique([whatsapp, tallerId])
+  @@schema("app918")
+}
+
+model Bici {
+  id           String     @id @default(cuid())
+  modelo       String
+  color        String?
+  estado       EstadoBici @default(ingresada)
+  tipoServicio String?
+  problemas    String[]
+  notas        String?
+  creadoEn     DateTime   @default(now())
+  clienteId    String
+  cliente      Cliente    @relation(fields: [clienteId], references: [id])
+  tallerId     String
+  taller       Taller     @relation(fields: [tallerId], references: [id])
+  fotos        FotoRecepcion[]
+  hallazgos    Hallazgo[]
+  historial    EventoHistorial[]
+  @@schema("app918")
+}
+
+enum EstadoBici {
+  ingresada
+  diagnostico
+  reparacion
+  lista
+  entregada
+  @@schema("app918")
+}
+
+model FotoRecepcion {
+  id       String   @id @default(cuid())
+  url      String
+  angulo   String
+  creadoEn DateTime @default(now())
+  biciId   String
+  bici     Bici     @relation(fields: [biciId], references: [id])
+  @@schema("app918")
+}
+
+model Hallazgo {
+  id           String         @id @default(cuid())
+  descripcion  String
+  precio       Float
+  fotoUrl      String?
+  estado       EstadoHallazgo @default(pendiente)
+  creadoEn     DateTime       @default(now())
+  respondidoEn DateTime?
+  biciId       String
+  bici         Bici           @relation(fields: [biciId], references: [id])
+  @@schema("app918")
+}
+
+enum EstadoHallazgo {
+  pendiente
+  aprobado
+  rechazado
+  @@schema("app918")
+}
+
+model EventoHistorial {
+  id          String   @id @default(cuid())
+  tipo        String
+  descripcion String
+  creadoEn    DateTime @default(now())
+  biciId      String
+  bici        Bici     @relation(fields: [biciId], references: [id])
+  @@schema("app918")
+}
