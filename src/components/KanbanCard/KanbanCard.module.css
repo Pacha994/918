@@ -1,0 +1,127 @@
+.card {
+  background: var(--bg2);
+  border: 1px solid var(--b2);
+  border-radius: var(--r-card);
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.card.hasHallazgo {
+  border-left: 3px solid var(--or);
+}
+
+.inner {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px;
+}
+
+.foto {
+  width: 52px;
+  height: 52px;
+  border-radius: 2px;
+  object-fit: cover;
+  background: var(--b2);
+  flex-shrink: 0;
+}
+
+.fotoPlaceholder {
+  width: 52px;
+  height: 52px;
+  border-radius: 2px;
+  background: var(--b2);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--t4);
+  font-size: 20px;
+}
+
+.info {
+  flex: 1;
+  min-width: 0;
+}
+
+.modelo {
+  font-size: 15px;
+  color: var(--t1);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 2px;
+}
+
+.cliente {
+  font-size: 13px;
+  color: var(--t3);
+  margin-bottom: 6px;
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.badge {
+  display: inline-block;
+  padding: 2px 7px;
+  border-radius: var(--r-badge);
+  font-size: 11px;
+}
+
+.badge.ingresada   { background: rgba(119,119,119,.15); color: var(--t3); }
+.badge.diagnostico { background: var(--bl1); color: var(--bl); }
+.badge.reparacion  { background: var(--ye1); color: var(--ye); }
+.badge.lista       { background: var(--gr1); color: var(--gr); }
+.badge.entregada   { background: rgba(119,119,119,.10); color: var(--t4); }
+
+.tiempo {
+  font-size: 11px;
+  color: var(--t4);
+}
+
+.footer {
+  padding: 0 12px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.hallazgoStrip {
+  flex: 1;
+  font-size: 12px;
+  color: var(--or);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.btn
+Avanzar {
+  font-family: var(--f);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 4px 12px;
+  border-radius: var(--r-input);
+  border: none;
+  background: var(--or);
+  color: #111;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.btnReportar {
+  font-family: var(--f);
+  font-size: 12px;
+  padding: 4px 12px;
+  border-radius: var(--r-input);
+  border: 1px solid var(--or);
+  background: transparent;
+  color: var(--or);
+  cursor: pointer;
+  flex-shrink: 0;
+}

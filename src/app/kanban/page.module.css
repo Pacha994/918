@@ -1,0 +1,115 @@
+.page {
+  max-width: 390px;
+  margin: 0 auto;
+  min-height: 100dvh;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  padding: 14px 16px 10px;
+  gap: 8px;
+  border-bottom: 1px solid var(--b1);
+}
+
+.titulo {
+  font-size: 18px;
+  font-weight: 400;
+  color: var(--t1);
+  flex: 1;
+}
+
+.total {
+  font-size: 12px;
+  color: var(--t4);
+}
+
+.btnNuevo {
+  font-family: var(--f);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 5px 12px;
+  border-radius: var(--r-input);
+  border: none;
+  background: var(--or);
+  color: #111;
+  cursor: pointer;
+}
+
+.pills {
+  display: flex;
+  gap: 6px;
+  padding: 10px 16px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  border-bottom: 1px solid var(--b1);
+}
+
+.pills::-webkit-scrollbar { display: none; }
+
+.pill {
+  font-family: var(--f);
+  font-size: 13px;
+  padding: 5px 12px;
+  border-radius: 20px;
+  border: 1px solid var(--b3);
+  background: transparent;
+  color: var(--t3);
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.pillActive {
+  background: var(--or);
+  border-color: var(--or);
+  color: #111;
+  font-weight: 500;
+}
+
+.lista {
+  flex: 1;
+  padding: 12px 16px;
+  overflow-y: auto;
+}
+
+.grupoHeader {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 16px 0 8px;
+}
+
+.grupoLabel {
+  font-size: 11px;
+  letter-spacing: .1em;
+  color: var(--t4);
+}
+
+.grupoDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.grupoDot[data-estado="ingresada"]   { background: var(--t4); }
+.grupoDot[data-estado="diagnostico"] { background: var(--bl); }
+.grupoDot[data-estado="reparacion"]  { background: var(--ye); }
+.grupoDot[data-estado="lista"]       { background: var(--gr); }
+
+.empty {
+  font-size: 14px;
+  color: var(--t4);
+  text-align: center;
+  padding: 40px 0;
+}
+
+.grupoVacio {
+  font-size: 13px;
+  color: var(--t4);
+  padding: 8px 0 4px;
+}
