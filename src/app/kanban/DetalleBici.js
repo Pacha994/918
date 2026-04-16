@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import styles from './DetalleBici.module.css'
+import styles      from './DetalleBici.module.css'
+import HallazgoForm from './HallazgoForm'
 
 const ESTADOS = ['ingresada', 'diagnostico', 'reparacion', 'lista', 'entregada']
 
@@ -21,11 +22,15 @@ const ESTADO_SIGUIENTE_LABEL = {
 }
 
 export default function DetalleBici({ bici, onClose, onAvanzar }) {
-  const [avanzando,  setAvanzando]  = useState(false)
-  const [fotoActiva, setFotoActiva] = useState(null)
+  const [avanzando,       setAvanzando]       = useState(false)
+  const [fotoActiva,      setFotoActiva]       = useState(null)
+  const [mostrarForm,     setMostrarForm]      = useState(false)
+  const [hallazgos,       setHallazgos]        = useState(bici.hallazgos || [])
+  const [resolviendoId,   setResolviendoId]    = useState(null)
 
-  const puedeAvanzar = bici.estado !== 'entregada'
   const indexEstado  = ESTADOS.indexOf(bici.estado)
+  const hayPendiente = hallazgos.some(h => h.estado === 'pendiente')
+  const puedeAvanzar = bici.estado !== 'entregada' && !hayPendiente
 
   const handleAvanzar = async () => {
     setAvanzando(true)
@@ -34,13 +39,32 @@ export default function DetalleBici({ bici, onClose, onAvanzar }) {
     onClose()
   }
 
+  const handleHallazgoCreado = (hallazgo) => {
+    setHallazgos(prev => [...prev, hallazgo])
+  }
+
+  const handleResolver = async (hallazgoId, estado) => {
+    setResolviendoId(hallazgoId)
+    try {
+      const res = await fetch(`/api/hallazgos/${hallazgoId}`, {
+        method:  'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ estado }),
+      })
+      if (!res.ok) throw new Error()
+      const actualizado = await res.json()
+      setHallazgos(prev => prev.map(h => h.id === hallazgoId ? actualizado : h))
+    } catch (err) {
+      console.error('Error resolviendo hallazgo:', err)
+    } finally {
+      setResolviendoId(null)
+    }
+  }
+
   const formatFecha = (fecha) => {
     if (!fecha) return '—'
     return new Date(fecha).toLocaleDateString('es-AR', {
-      day:    'numeric',
-      month:  'long',
-      hour:   '2-digit',
-      minute: '2-digit',
+      day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit',
     })
   }
 
@@ -49,7 +73,6 @@ export default function DetalleBici({ bici, onClose, onAvanzar }) {
       <div className={styles.overlay} onClick={onClose} />
 
       <div className={styles.sheet}>
-        {/* Handle */}
         <div className={styles.handle} onClick={onClose} />
 
         {/* Header */}
@@ -60,8 +83,7 @@ export default function DetalleBici({ bici, onClose, onAvanzar }) {
               <a
                 href={`https://wa.me/${bici.cliente.whatsapp.replace(/\D/g,'')}`}
                 className={styles.whatsapp}
-                target="_blank"
-                rel="noreferrer"
+                target="_blank" rel="noreferrer"
                 onClick={e => e.stopPropagation()}
               >
                 {bici.cliente.whatsapp}
@@ -77,15 +99,15 @@ export default function DetalleBici({ bici, onClose, onAvanzar }) {
           {bici.color && <span className={styles.biciColor}>{bici.color}</span>}
         </div>
 
-        {/* Timeline de estado */}
+        {/* Timeline */}
         <div className={styles.timeline}>
           {ESTADOS.filter(e => e !== 'entregada').map((estado, i) => (
             <div
               key={estado}
               className={[
                 styles.timelineItem,
-                i <= indexEstado          ? styles.timelineActivo  : '',
-                estado === bici.estado    ? styles.timelineCurrent : '',
+                i <= indexEstado       ? styles.timelineActivo  : '',
+                estado === bici.estado ? styles.timelineCurrent : '',
               ].join(' ')}
             >
               <div className={styles.timelineDot} />
@@ -110,12 +132,79 @@ export default function DetalleBici({ bici, onClose, onAvanzar }) {
           </div>
         )}
 
+        {/* Hallazgos */}
+        <div className={styles.seccion}>
+          <div className={styles.hallazgosHeader}>
+            <div className={styles.seccionLabel}>
+              Hallazgos {hallazgos.length > 0 && `(${hallazgos.length})`}
+            </div>
+            {bici.estado !== 'entregada' && (
+              <button className={styles.btnReportar} onClick={() => setMostrarForm(true)}>
+                + Reportar
+              </button>
+            )}
+          </div>
+
+          {hallazgos.length === 0 ? (
+            <div className={styles.hallazgosVacio}>Sin hallazgos registrados</div>
+          ) : (
+            <div className={styles.hallazgosList}>
+              {hallazgos.map(h => (
+                <div key={h.id} className={`${styles.hallazgoItem} ${styles['hallazgo_' + h.estado]}`}>
+                  <div className={styles.hallazgoTop}>
+                    {h.fotoUrl && (
+                      <img
+                        src={h.fotoUrl}
+                        alt=""
+                        className={styles.hallazgoFoto}
+                        onClick={() => setFotoActiva(h.fotoUrl)}
+                      />
+                    )}
+                    <div className={styles.hallazgoInfo}>
+                      <div className={styles.hallazgoDesc}>{h.descripcion}</div>
+                      <div className={styles.hallazgoPrecio}>
+                        ${Number(h.precio).toLocaleString('es-AR')}
+                      </div>
+                    </div>
+                    <div className={`${styles.hallazgoBadge} ${styles['badge_' + h.estado]}`}>
+                      {h.estado === 'pendiente'  && 'Esperando'}
+                      {h.estado === 'aprobado'   && 'Aprobado'}
+                      {h.estado === 'rechazado'  && 'Rechazado'}
+                    </div>
+                  </div>
+
+                  {/* Simulación de respuesta del cliente — solo en pendiente */}
+                  {h.estado === 'pendiente' && (
+                    <div className={styles.hallazgoSimular}>
+                      <span className={styles.simularLabel}>Simular respuesta del cliente:</span>
+                      <div className={styles.simularBtns}>
+                        <button
+                          className={styles.btnAprobar}
+                          disabled={resolviendoId === h.id}
+                          onClick={() => handleResolver(h.id, 'aprobado')}
+                        >
+                          ✓ Aprobó
+                        </button>
+                        <button
+                          className={styles.btnRechazar}
+                          disabled={resolviendoId === h.id}
+                          onClick={() => handleResolver(h.id, 'rechazado')}
+                        >
+                          ✕ Rechazó
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
         {/* Fotos de recepción */}
         {bici.fotos && bici.fotos.length > 0 && (
           <div className={styles.seccion}>
-            <div className={styles.seccionLabel}>
-              Fotos de recepción ({bici.fotos.length})
-            </div>
+            <div className={styles.seccionLabel}>Fotos de recepción ({bici.fotos.length})</div>
             <div className={styles.fotosGrid}>
               {bici.fotos.map((foto, i) => (
                 <img
@@ -130,21 +219,24 @@ export default function DetalleBici({ bici, onClose, onAvanzar }) {
           </div>
         )}
 
-        {/* Fecha */}
-        <div className={styles.fecha}>
-          Ingresó el {formatFecha(bici.creadoEn)}
-        </div>
+        <div className={styles.fecha}>Ingresó el {formatFecha(bici.creadoEn)}</div>
 
-        {/* Botón avanzar */}
-        {puedeAvanzar ? (
+        {/* Footer */}
+        {bici.estado !== 'entregada' ? (
           <div className={styles.footer}>
-            <button
-              className={styles.btnAvanzar}
-              onClick={handleAvanzar}
-              disabled={avanzando}
-            >
-              {avanzando ? 'Avanzando...' : ESTADO_SIGUIENTE_LABEL[bici.estado]}
-            </button>
+            {hayPendiente ? (
+              <button className={styles.btnAvanzar} disabled>
+                {ESTADO_SIGUIENTE_LABEL[bici.estado]} · presupuesto pendiente
+              </button>
+            ) : (
+              <button
+                className={styles.btnAvanzar}
+                onClick={handleAvanzar}
+                disabled={avanzando}
+              >
+                {avanzando ? 'Avanzando...' : ESTADO_SIGUIENTE_LABEL[bici.estado]}
+              </button>
+            )}
           </div>
         ) : (
           <div className={styles.footer}>
@@ -158,6 +250,15 @@ export default function DetalleBici({ bici, onClose, onAvanzar }) {
         <div className={styles.lightbox} onClick={() => setFotoActiva(null)}>
           <img src={fotoActiva} alt="" className={styles.lightboxImg} />
         </div>
+      )}
+
+      {/* HallazgoForm */}
+      {mostrarForm && (
+        <HallazgoForm
+          bici={bici}
+          onClose={() => setMostrarForm(false)}
+          onHallazgoCreado={handleHallazgoCreado}
+        />
       )}
     </>
   )

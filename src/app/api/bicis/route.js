@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
-// tallerId del seed — ajustá si cambia
 const TALLER_ID = process.env.TALLER_ID || 'taller-seed-id'
 
 export async function GET() {
@@ -12,8 +11,9 @@ export async function GET() {
         estado: { not: 'entregada' }
       },
       include: {
-        cliente: true,
-        fotos: true
+        cliente:   true,
+        fotos:     true,
+        hallazgos: true,
       },
       orderBy: { creadoEn: 'desc' }
     })
@@ -28,9 +28,7 @@ export async function POST(request) {
   try {
     const body = await request.json()
     const { cliente, bici, fotos } = body
-    // fotos: [{ url: string, angulo: string }, ...]
 
-    // Buscar cliente existente por whatsapp+taller, o crear uno nuevo
     let clienteRecord = await prisma.cliente.findUnique({
       where: {
         whatsapp_tallerId: {
@@ -43,14 +41,13 @@ export async function POST(request) {
     if (!clienteRecord) {
       clienteRecord = await prisma.cliente.create({
         data: {
-          nombre: cliente.nombre,
+          nombre:   cliente.nombre,
           whatsapp: cliente.whatsapp || '',
           tallerId: TALLER_ID,
         }
       })
     }
 
-    // Crear la bici con fotos anidadas
     const nuevaBici = await prisma.bici.create({
       data: {
         modelo:       bici.modelo,
@@ -65,7 +62,7 @@ export async function POST(request) {
           ? { create: fotos.map(f => ({ url: f.url, angulo: f.angulo || 'general' })) }
           : undefined
       },
-      include: { cliente: true, fotos: true }
+      include: { cliente: true, fotos: true, hallazgos: true }
     })
 
     return NextResponse.json(nuevaBici, { status: 201 })

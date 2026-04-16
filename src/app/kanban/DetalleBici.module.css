@@ -136,3 +136,119 @@
   padding:20px; cursor:pointer;
 }
 .lightboxImg { max-width:100%; max-height:100%; object-fit:contain; border-radius:var(--r-card); }
+
+/* ── HALLAZGOS ── */
+.hallazgosHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.hallazgosHeader .seccionLabel { margin-bottom: 0; }
+
+.btnReportar {
+  font-family: var(--f);
+  font-size: 13px;
+  padding: 4px 10px;
+  background: transparent;
+  color: var(--or);
+  border: 1px solid rgba(255,96,26,.4);
+  border-radius: var(--r-input);
+  cursor: pointer;
+  transition: all .1s;
+}
+.btnReportar:hover { background: var(--or1); border-color: var(--or); }
+
+.hallazgosVacio {
+  font-size: 13px;
+  color: var(--t4);
+  padding: 4px 0;
+}
+
+.hallazgosList { display: flex; flex-direction: column; gap: 8px; }
+
+.hallazgoItem {
+  border: 1px solid var(--b2);
+  border-radius: var(--r-card);
+  overflow: hidden;
+}
+.hallazgo_pendiente { border-color: var(--b2); }
+.hallazgo_aprobado  { border-color: rgba(30,200,100,.3); }
+.hallazgo_rechazado { opacity: .55; }
+
+.hallazgoTop {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+}
+.hallazgoFoto {
+  width: 48px; height: 48px;
+  object-fit: cover;
+  border-radius: var(--r-card);
+  border: 1px solid var(--b2);
+  flex-shrink: 0;
+  cursor: pointer;
+}
+.hallazgoInfo   { flex: 1; min-width: 0; }
+.hallazgoDesc   { font-size: 14px; color: var(--t2); line-height: 1.4; }
+.hallazgoPrecio {
+  font-size: 15px;
+  color: var(--or);
+  font-weight: 500;
+  margin-top: 3px;
+}
+.hallazgo_rechazado .hallazgoPrecio { color: var(--t4); text-decoration: line-through; }
+
+.hallazgoBadge {
+  font-size: 11px;
+  padding: 2px 7px;
+  border-radius: var(--r-badge);
+  flex-shrink: 0;
+  align-self: flex-start;
+}
+.badge_pendiente { background: var(--ye1); color: var(--ye); }
+.badge_aprobado  { background: var(--gr1); color: var(--gr); }
+.badge_rechazado { background: var(--b2);  color: var(--t4); }
+
+/* Simulación de respuesta */
+.hallazgoSimular {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-top: 1px solid var(--b1);
+  background: var(--bg3);
+}
+.simularLabel {
+  font-size: 11px;
+  color: var(--t4);
+  flex: 1;
+}
+.simularBtns { display: flex; gap: 6px; }
+.btnAprobar {
+  font-family: var(--f);
+  font-size: 12px;
+  padding: 4px 10px;
+  background: var(--gr1);
+  color: var(--gr);
+  border: 1px solid rgba(30,200,100,.3);
+  border-radius: var(--r-input);
+  cursor: pointer;
+  transition: all .1s;
+}
+.btnAprobar:hover    { background: rgba(30,200,100,.2); }
+.btnAprobar:disabled { opacity: .4; cursor: not-allowed; }
+.btnRechazar {
+  font-family: var(--f);
+  font-size: 12px;
+  padding: 4px 10px;
+  background: var(--re1);
+  color: var(--re);
+  border: 1px solid rgba(224,80,80,.3);
+  border-radius: var(--r-input);
+  cursor: pointer;
+  transition: all .1s;
+}
+.btnRechazar:hover    { background: rgba(224,80,80,.2); }
+.btnRechazar:disabled { opacity: .4; cursor: not-allowed; }
