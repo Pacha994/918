@@ -7,6 +7,9 @@
     "build": "next build",
     "start": "next start"
   },
+  "prisma": {
+    "seed": "node prisma/seed.js"
+  },
   "dependencies": {
     "@prisma/client": "^6.19.3",
     "@serwist/next": "^9.5.7",
