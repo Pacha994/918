@@ -136,16 +136,14 @@
   }
 }
 
+/* colHeader — sin sticky, overflow-x:auto en el padre lo rompe */
 .colHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 10px 14px;
   border-bottom: 1px solid var(--b1);
-  position: sticky;
-  top: 53px; /* igual a height del .header */
   background: var(--bg);
-  z-index: 5;
 }
 
 .colHeader[data-color='bl'] .colLabel { color: var(--bl); }
