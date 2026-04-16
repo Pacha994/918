@@ -1,0 +1,28 @@
+import { NextResponse } from 'next/server'
+
+const COOKIE_NAME    = '918_session'
+const RUTAS_PRIVADAS = ['/kanban']
+const RUTAS_PUBLICAS = ['/login', '/onboarding']
+
+export function middleware(request) {
+  const { pathname } = request.nextUrl
+  const session = request.cookies.get(COOKIE_NAME)?.value
+
+  // Ruta privada sin sesión → login
+  const esPrivada = RUTAS_PRIVADAS.some(r => pathname.startsWith(r))
+  if (esPrivada && !session) {
+    return NextResponse.redirect(new URL('/login', request.url))
+  }
+
+  // Ya tiene sesión y va a login/onboarding → kanban
+  const esPublica = RUTAS_PUBLICAS.some(r => pathname.startsWith(r))
+  if (esPublica && session) {
+    return NextResponse.redirect(new URL('/kanban', request.url))
+  }
+
+  return NextResponse.next()
+}
+
+export const config = {
+  matcher: ['/kanban/:path*', '/login', '/onboarding/:path*'],
+}

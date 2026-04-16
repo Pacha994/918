@@ -1,0 +1,111 @@
+.page {
+  min-height: 100dvh;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.cuerpo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 48px 24px 24px;
+  gap: 20px;
+}
+
+.logo {
+  font-size: 40px;
+  font-weight: 300;
+  color: var(--or);
+  letter-spacing: -.02em;
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+.titulo    { font-size: 26px; font-weight: 400; color: var(--t1); line-height: 1.2; }
+.subtitulo { font-size: 14px; color: var(--t3); line-height: 1.5; margin-top: -8px; }
+
+.error {
+  background: var(--re1);
+  border-left: 2px solid var(--re);
+  color: var(--re);
+  font-size: 13px;
+  padding: 8px 12px;
+  border-radius: 0 var(--r-card) var(--r-card) 0;
+}
+
+.campo { display: flex; flex-direction: column; gap: 8px; }
+.label { font-size: 13px; color: var(--t3); }
+
+.waWrap {
+  display: flex;
+  align-items: center;
+  background: var(--bg3);
+  border: 1px solid var(--b2);
+  border-radius: var(--r-input);
+  overflow: hidden;
+  transition: border-color .1s;
+}
+.waWrap:focus-within { border-color: var(--or); }
+
+.waPrefijo {
+  padding: 12px 0 12px 14px;
+  font-size: 16px;
+  color: var(--t3);
+  white-space: nowrap;
+}
+
+.waInput {
+  font-family: var(--f);
+  font-size: 16px;
+  background: transparent;
+  color: var(--t1);
+  border: none;
+  outline: none;
+  padding: 12px 14px;
+  flex: 1;
+  min-width: 0;
+  -webkit-appearance: none;
+}
+.waInput::placeholder { color: var(--t4); }
+
+.footer {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px 24px;
+  padding-bottom: calc(16px + env(safe-area-inset-bottom, 0));
+  border-top: 1px solid var(--b1);
+  background: var(--bg);
+}
+
+.btnPrimario {
+  font-family: var(--f);
+  font-size: 16px;
+  padding: 14px 24px;
+  background: var(--or);
+  color: #111;
+  border: none;
+  border-radius: var(--r-input);
+  cursor: pointer;
+  font-weight: 500;
+  transition: background .12s;
+}
+.btnPrimario:hover    { background: #e5551a; }
+.btnPrimario:disabled { opacity: .5; cursor: not-allowed; }
+
+.btnLink {
+  font-family: var(--f);
+  font-size: 13px;
+  color: var(--t4);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: center;
+  padding: 4px;
+  transition: color .1s;
+}
+.btnLink:hover { color: var(--t2); }
