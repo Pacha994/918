@@ -4,6 +4,8 @@ const withSerwist = require('@serwist/next').default({
   disable: process.env.NODE_ENV === 'development',
 });
 
-const nextConfig = {};
+const nextConfig = {
+  turbopack: {},
+};
 
 module.exports = withSerwist(nextConfig);
