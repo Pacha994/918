@@ -2,14 +2,6 @@
 
 import styles from './KanbanCard.module.css'
 
-const ESTADOS_LABEL = {
-  ingresada:   'Ingresada',
-  diagnostico: 'Diagnóstico',
-  reparacion:  'Reparación',
-  lista:       'Lista',
-  entregada:   'Entregada',
-}
-
 const ESTADO_SIGUIENTE_LABEL = {
   ingresada:   'Diagnóstico →',
   diagnostico: 'Reparación →',
@@ -18,52 +10,45 @@ const ESTADO_SIGUIENTE_LABEL = {
 }
 
 export default function KanbanCard({ bici, onAvanzar, onVerDetalle }) {
-  const puedeAvanzar = bici.estado !== 'lista' && bici.estado !== 'entregada'
+  const puedeAvanzar       = bici.estado !== 'lista' && bici.estado !== 'entregada'
   const tiempoTranscurrido = getTiempo(bici.creadoEn)
-  const fotoPortada = bici.fotos?.[0]?.url || null
+  const fotoPortada        = bici.fotos?.[0]?.url || null
 
   return (
     <div className={styles.card} onClick={() => onVerDetalle(bici)}>
-      {/* Foto portada si hay */}
+
       {fotoPortada && (
         <img src={fotoPortada} alt="" className={styles.fotoPortada} />
       )}
 
-      {/* Header */}
+      {/* Modelo como título principal */}
       <div className={styles.header}>
-        <div className={styles.clienteNombre}>{bici.cliente?.nombre || 'Sin cliente'}</div>
+        <div className={styles.modelo}>{bici.modelo}</div>
         <div className={styles.tiempo}>{tiempoTranscurrido}</div>
       </div>
 
-      {/* Bici info */}
-      <div className={styles.biciInfo}>
-        <span className={styles.modelo}>{bici.modelo}</span>
-        {bici.color && <span className={styles.color}>{bici.color}</span>}
+      {/* Cliente + color secundarios */}
+      <div className={styles.meta}>
+        {bici.cliente?.nombre && (
+          <span className={styles.clienteNombre}>{bici.cliente.nombre}</span>
+        )}
+        {bici.color && (
+          <span className={styles.color}>{bici.color}</span>
+        )}
       </div>
 
-      {/* Notas */}
-      {bici.notas && (
-        <div className={styles.notas}>{bici.notas}</div>
-      )}
-
-      {/* Footer */}
-      <div className={styles.footer}>
-        <div className={styles.estadoBadge} data-estado={bici.estado}>
-          {ESTADOS_LABEL[bici.estado] || bici.estado}
-        </div>
-
-        {puedeAvanzar && (
+      {/* Footer solo con botón avanzar */}
+      {puedeAvanzar && (
+        <div className={styles.footer}>
           <button
             className={styles.btnAvanzar}
-            onClick={(e) => {
-              e.stopPropagation()
-              onAvanzar(bici.id)
-            }}
+            onClick={(e) => { e.stopPropagation(); onAvanzar(bici.id) }}
           >
             {ESTADO_SIGUIENTE_LABEL[bici.estado]}
           </button>
-        )}
-      </div>
+        </div>
+      )}
+
     </div>
   )
 }
