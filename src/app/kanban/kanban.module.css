@@ -70,13 +70,13 @@
 
 /* Botón engranaje */
 .btnConfig {
-  font-size: 18px;
+  font-size: 22px;
   line-height: 1;
   background: none;
   border: none;
-  color: var(--t4);
+  color: var(--t3);
   cursor: pointer;
-  padding: 5px 7px;
+  padding: 6px 10px;
   border-radius: var(--r-input);
   transition: color 0.12s, background 0.12s;
   display: flex;
@@ -84,7 +84,7 @@
   justify-content: center;
 }
 .btnConfig:hover {
-  color: var(--t2);
+  color: var(--t1);
   background: var(--bg2);
 }
 

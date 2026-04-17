@@ -4,6 +4,55 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import styles from './configuracion.module.css'
 
+const SERVICIOS_DEFAULT = [
+  {
+    id:     'basico',
+    nombre: 'Service básico',
+    precio: 8000,
+    items: [
+      { label: 'Limpieza general',       activo: true },
+      { label: 'Lubricación de cadena',  activo: true },
+      { label: 'Ajuste de frenos',       activo: true },
+      { label: 'Inflado de cubiertas',   activo: true },
+      { label: 'Ajuste de cambios',      activo: true },
+    ],
+  },
+  {
+    id:     'completo',
+    nombre: 'Service completo',
+    precio: 18000,
+    items: [
+      { label: 'Todo el service básico',           activo: true },
+      { label: 'Revisión de rodamientos',          activo: true },
+      { label: 'Centrado de ruedas',               activo: true },
+      { label: 'Revisión de dirección',            activo: true },
+      { label: 'Limpieza profunda de transmisión', activo: true },
+    ],
+  },
+  {
+    id:     'premium',
+    nombre: 'Service premium',
+    precio: 35000,
+    items: [
+      { label: 'Todo el service completo',       activo: true },
+      { label: 'Desarmado completo',             activo: true },
+      { label: 'Cambio de cables y fundas',      activo: true },
+      { label: 'Revisión y ajuste de horquilla', activo: true },
+      { label: 'Pulido de aros',                 activo: true },
+    ],
+  },
+  {
+    id:     'diagnostico',
+    nombre: 'Solo diagnóstico',
+    precio: 3500,
+    items: [
+      { label: 'Inspección visual completa', activo: true },
+      { label: 'Informe de estado',          activo: true },
+      { label: 'Presupuesto detallado',      activo: true },
+    ],
+  },
+]
+
 export default function ConfiguracionPage() {
   const router = useRouter()
 
@@ -147,7 +196,20 @@ export default function ConfiguracionPage() {
           <div className={styles.seccionLabel}>Servicios</div>
 
           {servicios.length === 0 && (
-            <div className={styles.empty}>Sin servicios configurados.</div>
+            <div className={styles.emptyServicios}>
+              <div className={styles.emptyServiciosTexto}>
+                No hay servicios cargados todavía.
+              </div>
+              <button
+                className={styles.btnCargarDefaults}
+                onClick={() => setServicios(SERVICIOS_DEFAULT)}
+              >
+                Cargar servicios por defecto
+              </button>
+              <div className={styles.emptyServiciosHint}>
+                Básico · Completo · Premium · Diagnóstico — podés editar precios e ítems antes de guardar.
+              </div>
+            </div>
           )}
 
           {servicios.map((srv, sIdx) => (

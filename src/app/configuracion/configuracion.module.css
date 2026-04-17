@@ -129,6 +129,42 @@
   color: var(--t4);
 }
 
+/* ── EMPTY SERVICIOS ── */
+.emptyServicios {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 28px 16px 20px;
+  text-align: center;
+}
+
+.emptyServiciosTexto {
+  font-size: 15px;
+  color: var(--t3);
+}
+
+.btnCargarDefaults {
+  font-family: var(--f);
+  font-size: 15px;
+  font-weight: 500;
+  padding: 10px 24px;
+  background: var(--or);
+  color: #111;
+  border: none;
+  border-radius: var(--r-input);
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.btnCargarDefaults:hover { background: #e5551a; }
+
+.emptyServiciosHint {
+  font-size: 12px;
+  color: var(--t4);
+  line-height: 1.6;
+  max-width: 280px;
+}
+
 /* ── CAMPOS ── */
 .campo {
   padding: 0 16px;
