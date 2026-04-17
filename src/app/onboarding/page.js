@@ -10,11 +10,11 @@ const SERVICIOS_DEFAULT = [
     nombre: 'Service básico',
     precio: 8000,
     items: [
-      { label: 'Limpieza general',      activo: true },
+      { label: 'Limpieza general',    activo: true },
       { label: 'Lubricación de cadena', activo: true },
-      { label: 'Ajuste de frenos',      activo: true },
-      { label: 'Inflado de cubiertas',  activo: true },
-      { label: 'Ajuste de cambios',     activo: true },
+      { label: 'Ajuste de frenos',    activo: true },
+      { label: 'Inflado de cubiertas', activo: true },
+      { label: 'Ajuste de cambios',   activo: true },
     ],
   },
   {
@@ -22,10 +22,10 @@ const SERVICIOS_DEFAULT = [
     nombre: 'Service completo',
     precio: 18000,
     items: [
-      { label: 'Todo el service básico',           activo: true },
-      { label: 'Revisión de rodamientos',          activo: true },
-      { label: 'Centrado de ruedas',               activo: true },
-      { label: 'Revisión de dirección',            activo: true },
+      { label: 'Todo el service básico',        activo: true },
+      { label: 'Revisión de rodamientos',       activo: true },
+      { label: 'Centrado de ruedas',            activo: true },
+      { label: 'Revisión de dirección',         activo: true },
       { label: 'Limpieza profunda de transmisión', activo: true },
     ],
   },
@@ -34,11 +34,11 @@ const SERVICIOS_DEFAULT = [
     nombre: 'Service premium',
     precio: 35000,
     items: [
-      { label: 'Todo el service completo',      activo: true },
-      { label: 'Desarmado completo',            activo: true },
-      { label: 'Cambio de cables y fundas',     activo: true },
+      { label: 'Todo el service completo', activo: true },
+      { label: 'Desarmado completo',       activo: true },
+      { label: 'Cambio de cables y fundas', activo: true },
       { label: 'Revisión y ajuste de horquilla', activo: true },
-      { label: 'Pulido de aros',                activo: true },
+      { label: 'Pulido de aros',           activo: true },
     ],
   },
   {
@@ -55,18 +55,19 @@ const SERVICIOS_DEFAULT = [
 
 export default function OnboardingPage() {
   const router = useRouter()
-  const [paso,        setPaso]        = useState(0)
-  const [nombre,      setNombre]      = useState('')
-  const [whatsapp,    setWhatsapp]    = useState('')
-  const [codigo,      setCodigo]      = useState(['', '', '', ''])
-  const [servicios,   setServicios]   = useState(SERVICIOS_DEFAULT)
-  const [guardando,   setGuardando]   = useState(false)
-  const [error,       setError]       = useState(null)
+  const [paso,      setPaso]      = useState(0)
+  const [nombre,    setNombre]    = useState('')
+  const [whatsapp,  setWhatsapp]  = useState('')
+  const [codigo,    setCodigo]    = useState(['', '', '', ''])
+  const [servicios, setServicios] = useState(SERVICIOS_DEFAULT)
+  const [guardando, setGuardando] = useState(false)
+  const [error,     setError]     = useState(null)
   const [tallerNombre, setTallerNombre] = useState('')
 
+  // Paso 4-7: índice del servicio actual (0-3)
   const servicioIdx = paso - 3
 
-  const avanzar    = () => { setError(null); setPaso(p => p + 1) }
+  const avanzar = () => { setError(null); setPaso(p => p + 1) }
   const retroceder = () => { setError(null); setPaso(p => p - 1) }
 
   const handleCodigoChange = (i, val) => {
@@ -80,13 +81,14 @@ export default function OnboardingPage() {
   }
 
   const handleContinuarDatos = () => {
-    if (!nombre.trim())    { setError('El nombre del taller es requerido'); return }
-    if (!whatsapp.trim())  { setError('El WhatsApp es requerido'); return }
+    if (!nombre.trim()) { setError('El nombre del taller es requerido'); return }
+    if (!whatsapp.trim()) { setError('El WhatsApp es requerido'); return }
     setTallerNombre(nombre.trim())
     avanzar()
   }
 
   const handleVerificar = () => {
+    // Simulación: cualquier código de 4 dígitos pasa
     if (codigo.some(c => c === '')) { setError('Ingresá el código completo'); return }
     avanzar()
   }
@@ -120,7 +122,6 @@ export default function OnboardingPage() {
     setGuardando(true)
     setError(null)
     try {
-      // 1. Crear/actualizar taller
       const res = await fetch('/api/taller', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -135,16 +136,7 @@ export default function OnboardingPage() {
           })),
         }),
       })
-      if (!res.ok) throw new Error('Error al guardar taller')
-
-      // 2. Setear cookie de sesión
-      const loginRes = await fetch('/api/auth/login', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ whatsapp: whatsapp.trim() }),
-      })
-      if (!loginRes.ok) throw new Error('Error al iniciar sesión')
-
+      if (!res.ok) throw new Error('Error al guardar')
       avanzar()
     } catch (err) {
       console.error(err)
