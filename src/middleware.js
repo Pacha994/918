@@ -24,5 +24,5 @@ export function middleware(request) {
 }
 
 export const config = {
-  matcher: ['/kanban/:path*', '/login', '/onboarding/:path*'],
+  matcher: ['/kanban', '/kanban/:path*', '/login', '/onboarding', '/onboarding/:path*'],
 }
