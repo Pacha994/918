@@ -1,0 +1,2941 @@
+const sharp = require('sharp');
+const fs = require('fs');
+
+fs.mkdirSync('public/icons', { recursive: true });
+
+const svg = (size) => Buffer.from(
+  `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}">
+    <rect width="${size}" height="${size}" fill="#111111"/>
+    <text x="50%" y="54%" font-family="sans-serif" font-size="${Math.round(size * 0.4)}" font-weight="bold" fill="#FF601A" text-anchor="middle" dominant-baseline="middle">918</text>
+  </svg>`
+);
+
+sharp(svg(192)).png().toFile('public/icons/icon-192.png', (e) => console.log(e || 'icon-192.png ok'));
+sharp(svg(512)).png().toFile('public/icons/icon-512.png', (e) => console.log(e || 'icon-512.png ok'));
+const withSerwist = require('@serwist/next').default({
+  swSrc: 'src/sw.js',
+  swDest: 'public/sw.js',
+  disable: process.env.NODE_ENV === 'development',
+});
+
+const nextConfig = {
+  turbopack: {},
+};
+
+module.exports = withSerwist(nextConfig);
+// prisma/seed.js
+const { PrismaClient } = require('@prisma/client')
+const prisma = new PrismaClient()
+
+const TALLER_ID = 'cmo1pymo80000v58afkeey7so'
+
+// ─── Datos mock ────────────────────────────────────────────────────────────────
+
+const clientes = [
+  { nombre: 'Lucía Fernández',   whatsapp: '5491122334455' },
+  { nombre: 'Matías Romero',     whatsapp: '5491133445566' },
+  { nombre: 'Sofía Gutiérrez',   whatsapp: '5491144556677' },
+  { nombre: 'Nicolás Pereyra',   whatsapp: '5491155667788' },
+  { nombre: 'Valentina Castro',  whatsapp: '5491166778899' },
+  { nombre: 'Diego Morales',     whatsapp: '5491177889900' },
+  { nombre: 'Camila Torres',     whatsapp: '5491188990011' },
+  { nombre: 'Facundo Ríos',      whatsapp: '5491199001122' },
+]
+
+const modelos = [
+  { marca: 'Trek',        modelo: 'Marlin 5',         color: 'Azul mate'     },
+  { marca: 'Specialized', modelo: 'Rockhopper Comp',  color: 'Negro'         },
+  { marca: 'Giant',       modelo: 'Talon 3',          color: 'Rojo'          },
+  { marca: 'Trek',        modelo: 'FX 3',             color: 'Gris perla'    },
+  { marca: 'Orbea',       modelo: 'MX 50',            color: 'Verde oliva'   },
+  { marca: 'Scott',       modelo: 'Aspect 950',       color: 'Blanco'        },
+  { marca: 'Giant',       modelo: 'Escape 3',         color: 'Azul marino'   },
+  { marca: 'Specialized', modelo: 'Crosstrail Sport', color: 'Naranja'       },
+]
+
+const tiposServicio = ['basico', 'completo', 'premium', 'diagnostico']
+
+const problemasPool = [
+  'Frenos no responden bien',
+  'Cambios saltando',
+  'Ruido en el pedalier',
+  'Llanta pinchada',
+  'Manubrio flojo',
+  'Cadena desgastada',
+  'Horquilla con juego',
+  'Sillín roto',
+  'Luz delantera sin funcionar',
+  'Goma trasera gastada',
+]
+
+const hallazgosPool = [
+  { descripcion: 'Cable de freno trasero deshilachado',       precio: 3500  },
+  { descripcion: 'Pastillas de freno desgastadas (par)',       precio: 4800  },
+  { descripcion: 'Cadena con estiramiento excesivo',           precio: 6200  },
+  { descripcion: 'Piñón trasero con dientes rotos',            precio: 8500  },
+  { descripcion: 'Rodamiento del pedalier seco',               precio: 5500  },
+  { descripcion: 'Buje trasero con juego lateral',             precio: 9000  },
+  { descripcion: 'Llanta delantera doblada levemente',         precio: 7500  },
+  { descripcion: 'Shifter derecho sin clic definido',          precio: 11000 },
+  { descripcion: 'Tubular trasero con corte pequeño',          precio: 4200  },
+  { descripcion: 'Horquilla con fisura en soldadura inferior', precio: 18000 },
+]
+
+// ─── Helpers ───────────────────────────────────────────────────────────────────
+
+function horasAtras(h) {
+  return new Date(Date.now() - h * 60 * 60 * 1000)
+}
+
+function pick(arr) {
+  return arr[Math.floor(Math.random() * arr.length)]
+}
+
+function pickN(arr, n) {
+  const shuffled = [...arr].sort(() => 0.5 - Math.random())
+  return shuffled.slice(0, n)
+}
+
+function randomProblemas() {
+  return pickN(problemasPool, Math.floor(Math.random() * 2) + 1)
+}
+
+// ─── Bicis por estado ──────────────────────────────────────────────────────────
+
+async function crearBici({ clienteId, estado, modelo, tipoServicio, creadoEn, hallazgos: halls }) {
+  const bici = await prisma.bici.create({
+    data: {
+      modelo:      `${modelo.marca} ${modelo.modelo}`,
+      color:       modelo.color,
+      estado,
+      tipoServicio,
+      problemas:   randomProblemas(),
+      notas:       Math.random() > 0.6 ? 'Cliente deja hasta el viernes.' : null,
+      creadoEn,
+      clienteId,
+      tallerId:    TALLER_ID,
+    },
+  })
+
+  // Historial base
+  await prisma.eventoHistorial.create({
+    data: {
+      tipo:        'ingreso',
+      descripcion: 'Bici ingresada al taller',
+      creadoEn,
+      biciId: bici.id,
+    },
+  })
+
+  // Hallazgos
+  for (const h of halls) {
+    const respondidoEn = h.estado !== 'pendiente'
+      ? new Date(creadoEn.getTime() + 2 * 60 * 60 * 1000)
+      : null
+
+    await prisma.hallazgo.create({
+      data: {
+        descripcion:  h.descripcion,
+        precio:       h.precio,
+        fotoUrl:      'https://placehold.co/400x300/1a1a1a/666?text=foto',
+        estado:       h.estado,
+        creadoEn:     new Date(creadoEn.getTime() + 60 * 60 * 1000),
+        respondidoEn,
+        biciId:       bici.id,
+      },
+    })
+  }
+
+  return bici
+}
+
+// ─── Main ──────────────────────────────────────────────────────────────────────
+
+async function main() {
+  console.log('🌱 Iniciando seed...')
+
+  // Limpiar datos previos del taller (en orden por FK)
+  await prisma.eventoHistorial.deleteMany({ where: { bici: { tallerId: TALLER_ID } } })
+  await prisma.hallazgo.deleteMany({        where: { bici: { tallerId: TALLER_ID } } })
+  await prisma.fotoRecepcion.deleteMany({   where: { bici: { tallerId: TALLER_ID } } })
+  await prisma.bici.deleteMany({            where: { tallerId: TALLER_ID } })
+  await prisma.cliente.deleteMany({         where: { tallerId: TALLER_ID } })
+
+  console.log('🗑️  Datos anteriores eliminados')
+
+  // Crear clientes
+  const clientesCreados = []
+  for (const c of clientes) {
+    const cliente = await prisma.cliente.create({
+      data: { ...c, tallerId: TALLER_ID },
+    })
+    clientesCreados.push(cliente)
+  }
+  console.log(`👥 ${clientesCreados.length} clientes creados`)
+
+  // ── INGRESADAS (2 bicis, recientes) ─────────────────────────────────────────
+  await crearBici({
+    clienteId:    clientesCreados[0].id,
+    estado:       'ingresada',
+    modelo:       modelos[0],
+    tipoServicio: 'completo',
+    creadoEn:     horasAtras(2),
+    hallazgos:    [],
+  })
+
+  await crearBici({
+    clienteId:    clientesCreados[1].id,
+    estado:       'ingresada',
+    modelo:       modelos[4],
+    tipoServicio: 'diagnostico',
+    creadoEn:     horasAtras(5),
+    hallazgos:    [],
+  })
+
+  // ── DIAGNÓSTICO (2 bicis, con hallazgos pendientes) ──────────────────────────
+  await crearBici({
+    clienteId:    clientesCreados[2].id,
+    estado:       'diagnostico',
+    modelo:       modelos[1],
+    tipoServicio: 'premium',
+    creadoEn:     horasAtras(24),
+    hallazgos:    [
+      { ...hallazgosPool[0], estado: 'pendiente' },
+      { ...hallazgosPool[4], estado: 'pendiente' },
+    ],
+  })
+
+  await crearBici({
+    clienteId:    clientesCreados[3].id,
+    estado:       'diagnostico',
+    modelo:       modelos[6],
+    tipoServicio: 'basico',
+    creadoEn:     horasAtras(30),
+    hallazgos:    [
+      { ...hallazgosPool[8], estado: 'pendiente' },
+    ],
+  })
+
+  // ── REPARACIÓN (2 bicis, hallazgos aprobados y uno rechazado) ────────────────
+  await crearBici({
+    clienteId:    clientesCreados[4].id,
+    estado:       'reparacion',
+    modelo:       modelos[2],
+    tipoServicio: 'completo',
+    creadoEn:     horasAtras(48),
+    hallazgos:    [
+      { ...hallazgosPool[1], estado: 'aprobado'  },
+      { ...hallazgosPool[2], estado: 'aprobado'  },
+      { ...hallazgosPool[9], estado: 'rechazado' },
+    ],
+  })
+
+  await crearBici({
+    clienteId:    clientesCreados[5].id,
+    estado:       'reparacion',
+    modelo:       modelos[7],
+    tipoServicio: 'premium',
+    creadoEn:     horasAtras(60),
+    hallazgos:    [
+      { ...hallazgosPool[5], estado: 'aprobado' },
+      { ...hallazgosPool[6], estado: 'aprobado' },
+    ],
+  })
+
+  // ── LISTA (2 bicis, todo resuelto) ───────────────────────────────────────────
+  await crearBici({
+    clienteId:    clientesCreados[6].id,
+    estado:       'lista',
+    modelo:       modelos[3],
+    tipoServicio: 'basico',
+    creadoEn:     horasAtras(72),
+    hallazgos:    [
+      { ...hallazgosPool[3], estado: 'aprobado' },
+    ],
+  })
+
+  await crearBici({
+    clienteId:    clientesCreados[7].id,
+    estado:       'lista',
+    modelo:       modelos[5],
+    tipoServicio: 'completo',
+    creadoEn:     horasAtras(96),
+    hallazgos:    [
+      { ...hallazgosPool[7], estado: 'aprobado'  },
+      { ...hallazgosPool[8], estado: 'rechazado' },
+    ],
+  })
+
+  console.log('✅ Seed completo — 8 bicis en 4 estados')
+}
+
+main()
+  .catch(e => { console.error(e); process.exit(1) })
+  .finally(() => prisma.$disconnect())
+(()=>{"use strict";let e,t,a,s,r,n,i,c={googleAnalytics:"googleAnalytics",precache:"precache-v2",prefix:"serwist",runtime:"runtime",suffix:"u">typeof registration?registration.scope:""},o=e=>[c.prefix,e,c.suffix].filter(e=>e&&e.length>0).join("-"),l=e=>e||o(c.precache),h=e=>e||o(c.runtime);class u extends Error{details;constructor(e,t){super(((e,...t)=>{let a=e;return t.length>0&&(a+=` :: ${JSON.stringify(t)}`),a})(e,t)),this.name=e,this.details=t}}function d(e){return new Promise(t=>setTimeout(t,e))}let m=new Set;function f(e,t){let a=new URL(e);for(let e of t)a.searchParams.delete(e);return a.href}async function g(e,t,a,s){let r=f(t.url,a);if(t.url===r)return e.match(t,s);let n={...s,ignoreSearch:!0};for(let i of(await e.keys(t,n)))if(r===f(i.url,a))return e.match(i,s)}class w{promise;resolve;reject;constructor(){this.promise=new Promise((e,t)=>{this.resolve=e,this.reject=t})}}let p=async()=>{for(let e of m)await e()},y="-precache-",_=async(e,t=y)=>{let a=(await self.caches.keys()).filter(a=>a.includes(t)&&a.includes(self.registration.scope)&&a!==e);return await Promise.all(a.map(e=>self.caches.delete(e))),a},x=(e,t)=>{let a=t();return e.waitUntil(a),a},b=(e,t)=>t.some(t=>e instanceof t),E=new WeakMap,v=new WeakMap,R=new WeakMap,q={get(e,t,a){if(e instanceof IDBTransaction){if("done"===t)return E.get(e);if("store"===t)return a.objectStoreNames[1]?void 0:a.objectStore(a.objectStoreNames[0])}return S(e[t])},set:(e,t,a)=>(e[t]=a,!0),has:(e,t)=>e instanceof IDBTransaction&&("done"===t||"store"===t)||t in e};function S(e){if(e instanceof IDBRequest){let t;return t=new Promise((t,a)=>{let s=()=>{e.removeEventListener("success",r),e.removeEventListener("error",n)},r=()=>{t(S(e.result)),s()},n=()=>{a(e.error),s()};e.addEventListener("success",r),e.addEventListener("error",n)}),R.set(t,e),t}if(v.has(e))return v.get(e);let t=function(e){if("function"==typeof e)return(r||(r=[IDBCursor.prototype.advance,IDBCursor.prototype.continue,IDBCursor.prototype.continuePrimaryKey])).includes(e)?function(...t){return e.apply(C(this),t),S(this.request)}:function(...t){return S(e.apply(C(this),t))};return(e instanceof IDBTransaction&&function(e){if(E.has(e))return;let t=new Promise((t,a)=>{let s=()=>{e.removeEventListener("complete",r),e.removeEventListener("error",n),e.removeEventListener("abort",n)},r=()=>{t(),s()},n=()=>{a(e.error||new DOMException("AbortError","AbortError")),s()};e.addEventListener("complete",r),e.addEventListener("error",n),e.addEventListener("abort",n)});E.set(e,t)}(e),b(e,s||(s=[IDBDatabase,IDBObjectStore,IDBIndex,IDBCursor,IDBTransaction])))?new Proxy(e,q):e}(e);return t!==e&&(v.set(e,t),R.set(t,e)),t}let C=e=>R.get(e);function D(e,t,{blocked:a,upgrade:s,blocking:r,terminated:n}={}){let i=indexedDB.open(e,t),c=S(i);return s&&i.addEventListener("upgradeneeded",e=>{s(S(i.result),e.oldVersion,e.newVersion,S(i.transaction),e)}),a&&i.addEventListener("blocked",e=>a(e.oldVersion,e.newVersion,e)),c.then(e=>{n&&e.addEventListener("close",()=>n()),r&&e.addEventListener("versionchange",e=>r(e.oldVersion,e.newVersion,e))}).catch(()=>{}),c}let L=["get","getKey","getAll","getAllKeys","count"],N=["put","add","delete","clear"],T=new Map;function A(e,t){if(!(e instanceof IDBDatabase&&!(t in e)&&"string"==typeof t))return;if(T.get(t))return T.get(t);let a=t.replace(/FromIndex$/,""),s=t!==a,r=N.includes(a);if(!(a in(s?IDBIndex:IDBObjectStore).prototype)||!(r||L.includes(a)))return;let n=async function(e,...t){let n=this.transaction(e,r?"readwrite":"readonly"),i=n.store;return s&&(i=i.index(t.shift())),(await Promise.all([i[a](...t),r&&n.done]))[0]};return T.set(t,n),n}q={...e=q,get:(t,a,s)=>A(t,a)||e.get(t,a,s),has:(t,a)=>!!A(t,a)||e.has(t,a)};let k=["continue","continuePrimaryKey","advance"],P={},I=new WeakMap,U=new WeakMap,F={get(e,t){if(!k.includes(t))return e[t];let a=P[t];return a||(a=P[t]=function(...e){I.set(this,U.get(this)[t](...e))}),a}};async function*B(...e){let t=this;if(t instanceof IDBCursor||(t=await t.openCursor(...e)),!t)return;let a=new Proxy(t,F);for(U.set(a,t),R.set(a,C(t));t;)yield a,t=await (I.get(a)||t.continue()),I.delete(a)}function K(e,t){return t===Symbol.asyncIterator&&b(e,[IDBIndex,IDBObjectStore,IDBCursor])||"iterate"===t&&b(e,[IDBIndex,IDBObjectStore])}q={...t=q,get:(e,a,s)=>K(e,a)?B:t.get(e,a,s),has:(e,a)=>K(e,a)||t.has(e,a)};let M=async(e,t)=>{let s=null;if(e.url&&(s=new URL(e.url).origin),s!==self.location.origin)throw new u("cross-origin-copy-response",{origin:s});let r=e.clone(),n={headers:new Headers(r.headers),status:r.status,statusText:r.statusText},i=t?t(n):n,c=!function(){if(void 0===a){let e=new Response("");if("body"in e)try{new Response(e.body),a=!0}catch{a=!1}a=!1}return a}()?await r.blob():r.body;return new Response(c,i)},O="requests",W="queueName";class j{_db=null;async addEntry(e){let t=(await this.getDb()).transaction(O,"readwrite",{durability:"relaxed"});await t.store.add(e),await t.done}async getFirstEntryId(){let e=await this.getDb(),t=await e.transaction(O).store.openCursor();return t?.value.id}async getAllEntriesByQueueName(e){let t=await this.getDb();return await t.getAllFromIndex(O,W,IDBKeyRange.only(e))||[]}async getEntryCountByQueueName(e){return(await this.getDb()).countFromIndex(O,W,IDBKeyRange.only(e))}async deleteEntry(e){let t=await this.getDb();await t.delete(O,e)}async getFirstEntryByQueueName(e){return await this.getEndEntryFromIndex(IDBKeyRange.only(e),"next")}async getLastEntryByQueueName(e){return await this.getEndEntryFromIndex(IDBKeyRange.only(e),"prev")}async getEndEntryFromIndex(e,t){let a=await this.getDb(),s=await a.transaction(O).store.index(W).openCursor(e,t);return s?.value}async getDb(){return this._db||(this._db=await D("serwist-background-sync",3,{upgrade:this._upgradeDb})),this._db}_upgradeDb(e,t){t>0&&t<3&&e.objectStoreNames.contains(O)&&e.deleteObjectStore(O),e.createObjectStore(O,{autoIncrement:!0,keyPath:"id"}).createIndex(W,W,{unique:!1})}}class H{_queueName;_queueDb;constructor(e){this._queueName=e,this._queueDb=new j}async pushEntry(e){delete e.id,e.queueName=this._queueName,await this._queueDb.addEntry(e)}async unshiftEntry(e){let t=await this._queueDb.getFirstEntryId();t?e.id=t-1:delete e.id,e.queueName=this._queueName,await this._queueDb.addEntry(e)}async popEntry(){return this._removeEntry(await this._queueDb.getLastEntryByQueueName(this._queueName))}async shiftEntry(){return this._removeEntry(await this._queueDb.getFirstEntryByQueueName(this._queueName))}async getAll(){return await this._queueDb.getAllEntriesByQueueName(this._queueName)}async size(){return await this._queueDb.getEntryCountByQueueName(this._queueName)}async deleteEntry(e){await this._queueDb.deleteEntry(e)}async _removeEntry(e){return e&&await this.deleteEntry(e.id),e}}let $=["method","referrer","referrerPolicy","mode","credentials","cache","redirect","integrity","keepalive"];class G{_requestData;static async fromRequest(e){let t={url:e.url,headers:{}};for(let a of("GET"!==e.method&&(t.body=await e.clone().arrayBuffer()),e.headers.forEach((e,a)=>{t.headers[a]=e}),$))void 0!==e[a]&&(t[a]=e[a]);return new G(t)}constructor(e){"navigate"===e.mode&&(e.mode="same-origin"),this._requestData=e}toObject(){let e=Object.assign({},this._requestData);return e.headers=Object.assign({},this._requestData.headers),e.body&&(e.body=e.body.slice(0)),e}toRequest(){return new Request(this._requestData.url,this._requestData)}clone(){return new G(this.toObject())}}let Q="serwist-background-sync",V=new Set,z=e=>{let t={request:new G(e.requestData).toRequest(),timestamp:e.timestamp};return e.metadata&&(t.metadata=e.metadata),t};class J{_name;_onSync;_maxRetentionTime;_queueStore;_forceSyncFallback;_syncInProgress=!1;_requestsAddedDuringSync=!1;constructor(e,{forceSyncFallback:t,onSync:a,maxRetentionTime:s}={}){if(V.has(e))throw new u("duplicate-queue-name",{name:e});V.add(e),this._name=e,this._onSync=a||this.replayRequests,this._maxRetentionTime=s||10080,this._forceSyncFallback=!!t,this._queueStore=new H(this._name),this._addSyncListener()}get name(){return this._name}async pushRequest(e){await this._addRequest(e,"push")}async unshiftRequest(e){await this._addRequest(e,"unshift")}async popRequest(){return this._removeRequest("pop")}async shiftRequest(){return this._removeRequest("shift")}async getAll(){let e=await this._queueStore.getAll(),t=Date.now(),a=[];for(let s of e){let e=60*this._maxRetentionTime*1e3;t-s.timestamp>e?await this._queueStore.deleteEntry(s.id):a.push(z(s))}return a}async size(){return await this._queueStore.size()}async _addRequest({request:e,metadata:t,timestamp:a=Date.now()},s){let r={requestData:(await G.fromRequest(e.clone())).toObject(),timestamp:a};switch(t&&(r.metadata=t),s){case"push":await this._queueStore.pushEntry(r);break;case"unshift":await this._queueStore.unshiftEntry(r)}this._syncInProgress?this._requestsAddedDuringSync=!0:await this.registerSync()}async _removeRequest(e){let t,a=Date.now();switch(e){case"pop":t=await this._queueStore.popEntry();break;case"shift":t=await this._queueStore.shiftEntry()}if(t){let s=60*this._maxRetentionTime*1e3;return a-t.timestamp>s?this._removeRequest(e):z(t)}}async replayRequests(){let e;for(;e=await this.shiftRequest();)try{await fetch(e.request.clone())}catch{throw await this.unshiftRequest(e),new u("queue-replay-failed",{name:this._name})}}async registerSync(){if("sync"in self.registration&&!this._forceSyncFallback)try{await self.registration.sync.register(`${Q}:${this._name}`)}catch(e){}}_addSyncListener(){"sync"in self.registration&&!this._forceSyncFallback?self.addEventListener("sync",e=>{if(e.tag===`${Q}:${this._name}`){let t=async()=>{let t;this._syncInProgress=!0;try{await this._onSync({queue:this})}catch(e){if(e instanceof Error)throw e}finally{this._requestsAddedDuringSync&&!(t&&!e.lastChance)&&await this.registerSync(),this._syncInProgress=!1,this._requestsAddedDuringSync=!1}};e.waitUntil(t())}}):this._onSync({queue:this})}static get _queueNames(){return V}}class X{_queue;constructor(e,t){this._queue=new J(e,t)}async fetchDidFail({request:e}){await this._queue.pushRequest({request:e})}}let Y={cacheWillUpdate:async({response:e})=>200===e.status||0===e.status?e:null};function Z(e){return"string"==typeof e?new Request(e):e}class ee{event;request;url;params;_cacheKeys={};_strategy;_handlerDeferred;_extendLifetimePromises;_plugins;_pluginStateMap;constructor(e,t){for(const a of(this.event=t.event,this.request=t.request,t.url&&(this.url=t.url,this.params=t.params),this._strategy=e,this._handlerDeferred=new w,this._extendLifetimePromises=[],this._plugins=[...e.plugins],this._pluginStateMap=new Map,this._plugins))this._pluginStateMap.set(a,{});this.event.waitUntil(this._handlerDeferred.promise)}async fetch(e){let{event:t}=this,a=Z(e),s=await this.getPreloadResponse();if(s)return s;let r=this.hasCallback("fetchDidFail")?a.clone():null;try{for(let e of this.iterateCallbacks("requestWillFetch"))a=await e({request:a.clone(),event:t})}catch(e){if(e instanceof Error)throw new u("plugin-error-request-will-fetch",{thrownErrorMessage:e.message})}let n=a.clone();try{let e;for(let s of(e=await fetch(a,"navigate"===a.mode?void 0:this._strategy.fetchOptions),this.iterateCallbacks("fetchDidSucceed")))e=await s({event:t,request:n,response:e});return e}catch(e){throw r&&await this.runCallbacks("fetchDidFail",{error:e,event:t,originalRequest:r.clone(),request:n.clone()}),e}}async fetchAndCachePut(e){let t=await this.fetch(e),a=t.clone();return this.waitUntil(this.cachePut(e,a)),t}async cacheMatch(e){let t,a=Z(e),{cacheName:s,matchOptions:r}=this._strategy,n=await this.getCacheKey(a,"read"),i={...r,cacheName:s};for(let e of(t=await caches.match(n,i),this.iterateCallbacks("cachedResponseWillBeUsed")))t=await e({cacheName:s,matchOptions:r,cachedResponse:t,request:n,event:this.event})||void 0;return t}async cachePut(e,t){let a=Z(e);await d(0);let s=await this.getCacheKey(a,"write");if(!t)throw new u("cache-put-with-no-response",{url:new URL(String(s.url),location.href).href.replace(RegExp(`^${location.origin}`),"")});let r=await this._ensureResponseSafeToCache(t);if(!r)return!1;let{cacheName:n,matchOptions:i}=this._strategy,c=await self.caches.open(n),o=this.hasCallback("cacheDidUpdate"),l=o?await g(c,s.clone(),["__WB_REVISION__"],i):null;try{await c.put(s,o?r.clone():r)}catch(e){if(e instanceof Error)throw"QuotaExceededError"===e.name&&await p(),e}for(let e of this.iterateCallbacks("cacheDidUpdate"))await e({cacheName:n,oldResponse:l,newResponse:r.clone(),request:s,event:this.event});return!0}async getCacheKey(e,t){let a=`${e.url} | ${t}`;if(!this._cacheKeys[a]){let s=e;for(let e of this.iterateCallbacks("cacheKeyWillBeUsed"))s=Z(await e({mode:t,request:s,event:this.event,params:this.params}));this._cacheKeys[a]=s}return this._cacheKeys[a]}hasCallback(e){for(let t of this._strategy.plugins)if(e in t)return!0;return!1}async runCallbacks(e,t){for(let a of this.iterateCallbacks(e))await a(t)}*iterateCallbacks(e){for(let t of this._strategy.plugins)if("function"==typeof t[e]){let a=this._pluginStateMap.get(t),s=s=>{let r={...s,state:a};return t[e](r)};yield s}}waitUntil(e){return this._extendLifetimePromises.push(e),e}async doneWaiting(){let e;for(;e=this._extendLifetimePromises.shift();)await e}destroy(){this._handlerDeferred.resolve(null)}async getPreloadResponse(){if(this.event instanceof FetchEvent&&"navigate"===this.event.request.mode&&"preloadResponse"in this.event)try{let e=await this.event.preloadResponse;if(e)return e}catch(e){}}async _ensureResponseSafeToCache(e){let t=e,a=!1;for(let e of this.iterateCallbacks("cacheWillUpdate"))if(t=await e({request:this.request,response:t,event:this.event})||void 0,a=!0,!t)break;return!a&&t&&200!==t.status&&(t=void 0),t}}class et{cacheName;plugins;fetchOptions;matchOptions;constructor(e={}){this.cacheName=h(e.cacheName),this.plugins=e.plugins||[],this.fetchOptions=e.fetchOptions,this.matchOptions=e.matchOptions}handle(e){let[t]=this.handleAll(e);return t}handleAll(e){e instanceof FetchEvent&&(e={event:e,request:e.request});let t=e.event,a="string"==typeof e.request?new Request(e.request):e.request,s=new ee(this,e.url?{event:t,request:a,url:e.url,params:e.params}:{event:t,request:a}),r=this._getResponse(s,a,t),n=this._awaitComplete(r,s,a,t);return[r,n]}async _getResponse(e,t,a){let s;await e.runCallbacks("handlerWillStart",{event:a,request:t});try{if(s=await this._handle(t,e),void 0===s||"error"===s.type)throw new u("no-response",{url:t.url})}catch(r){if(r instanceof Error){for(let n of e.iterateCallbacks("handlerDidError"))if(void 0!==(s=await n({error:r,event:a,request:t})))break}if(!s)throw r}for(let r of e.iterateCallbacks("handlerWillRespond"))s=await r({event:a,request:t,response:s});return s}async _awaitComplete(e,t,a,s){let r,n;try{r=await e}catch{}try{await t.runCallbacks("handlerDidRespond",{event:s,request:a,response:r}),await t.doneWaiting()}catch(e){e instanceof Error&&(n=e)}if(await t.runCallbacks("handlerDidComplete",{event:s,request:a,response:r,error:n}),t.destroy(),n)throw n}}class ea extends et{_networkTimeoutSeconds;constructor(e={}){super(e),this.plugins.some(e=>"cacheWillUpdate"in e)||this.plugins.unshift(Y),this._networkTimeoutSeconds=e.networkTimeoutSeconds||0}async _handle(e,t){let a,s=[],r=[];if(this._networkTimeoutSeconds){let{id:n,promise:i}=this._getTimeoutPromise({request:e,logs:s,handler:t});a=n,r.push(i)}let n=this._getNetworkPromise({timeoutId:a,request:e,logs:s,handler:t});r.push(n);let i=await t.waitUntil((async()=>await t.waitUntil(Promise.race(r))||await n)());if(!i)throw new u("no-response",{url:e.url});return i}_getTimeoutPromise({request:e,logs:t,handler:a}){let s;return{promise:new Promise(t=>{s=setTimeout(async()=>{t(await a.cacheMatch(e))},1e3*this._networkTimeoutSeconds)}),id:s}}async _getNetworkPromise({timeoutId:e,request:t,logs:a,handler:s}){let r,n;try{n=await s.fetchAndCachePut(t)}catch(e){e instanceof Error&&(r=e)}return e&&clearTimeout(e),(r||!n)&&(n=await s.cacheMatch(t)),n}}class es extends et{_networkTimeoutSeconds;constructor(e={}){super(e),this._networkTimeoutSeconds=e.networkTimeoutSeconds||0}async _handle(e,t){let a,s;try{let a=[t.fetch(e)];if(this._networkTimeoutSeconds){let e=d(1e3*this._networkTimeoutSeconds);a.push(e)}if(!(s=await Promise.race(a)))throw Error(`Timed out the network response after ${this._networkTimeoutSeconds} seconds.`)}catch(e){e instanceof Error&&(a=e)}if(!s)throw new u("no-response",{url:e.url,error:a});return s}}let er=e=>e&&"object"==typeof e?e:{handle:e};class en{handler;match;method;catchHandler;constructor(e,t,a="GET"){this.handler=er(t),this.match=e,this.method=a}setCatchHandler(e){this.catchHandler=er(e)}}class ei extends et{_fallbackToNetwork;static defaultPrecacheCacheabilityPlugin={cacheWillUpdate:async({response:e})=>!e||e.status>=400?null:e};static copyRedirectedCacheableResponsesPlugin={cacheWillUpdate:async({response:e})=>e.redirected?await M(e):e};constructor(e={}){e.cacheName=l(e.cacheName),super(e),this._fallbackToNetwork=!1!==e.fallbackToNetwork,this.plugins.push(ei.copyRedirectedCacheableResponsesPlugin)}async _handle(e,t){let a=await t.getPreloadResponse();if(a)return a;let s=await t.cacheMatch(e);return s||(t.event&&"install"===t.event.type?await this._handleInstall(e,t):await this._handleFetch(e,t))}async _handleFetch(e,t){let a,s=t.params||{};if(this._fallbackToNetwork){let r=s.integrity,n=e.integrity,i=!n||n===r;a=await t.fetch(new Request(e,{integrity:"no-cors"!==e.mode?n||r:void 0})),r&&i&&"no-cors"!==e.mode&&(this._useDefaultCacheabilityPluginIfNeeded(),await t.cachePut(e,a.clone()))}else throw new u("missing-precache-entry",{cacheName:this.cacheName,url:e.url});return a}async _handleInstall(e,t){this._useDefaultCacheabilityPluginIfNeeded();let a=await t.fetch(e);if(!await t.cachePut(e,a.clone()))throw new u("bad-precaching-response",{url:e.url,status:a.status});return a}_useDefaultCacheabilityPluginIfNeeded(){let e=null,t=0;for(let[a,s]of this.plugins.entries())s!==ei.copyRedirectedCacheableResponsesPlugin&&(s===ei.defaultPrecacheCacheabilityPlugin&&(e=a),s.cacheWillUpdate&&t++);0===t?this.plugins.push(ei.defaultPrecacheCacheabilityPlugin):t>1&&null!==e&&this.plugins.splice(e,1)}}class ec extends en{_allowlist;_denylist;constructor(e,{allowlist:t=[/./],denylist:a=[]}={}){super(e=>this._match(e),e),this._allowlist=t,this._denylist=a}_match({url:e,request:t}){if(t&&"navigate"!==t.mode)return!1;let a=e.pathname+e.search;for(let e of this._denylist)if(e.test(a))return!1;return!!this._allowlist.some(e=>e.test(a))}}function*eo(e,{directoryIndex:t="index.html",ignoreURLParametersMatching:a=[/^utm_/,/^fbclid$/],cleanURLs:s=!0,urlManipulation:r}={}){let n=new URL(e,location.href);n.hash="",yield n.href;let i=((e,t=[])=>{for(let a of[...e.searchParams.keys()])t.some(e=>e.test(a))&&e.searchParams.delete(a);return e})(n,a);if(yield i.href,t&&i.pathname.endsWith("/")){let e=new URL(i.href);e.pathname+=t,yield e.href}if(s){let e=new URL(i.href);e.pathname+=".html",yield e.href}if(r)for(let e of r({url:n}))yield e.href}class el extends en{constructor(e,t,a){super(({url:t})=>{let a=e.exec(t.href);if(a)return t.origin!==location.origin&&0!==a.index?void 0:a.slice(1)},t,a)}}let eh=e=>{if(!e)throw new u("add-to-cache-list-unexpected-type",{entry:e});if("string"==typeof e){let t=new URL(e,location.href);return{cacheKey:t.href,url:t.href}}let{revision:t,url:a}=e;if(!a)throw new u("add-to-cache-list-unexpected-type",{entry:e});if(!t){let e=new URL(a,location.href);return{cacheKey:e.href,url:e.href}}let s=new URL(a,location.href),r=new URL(a,location.href);return s.searchParams.set("__WB_REVISION__",t),{cacheKey:s.href,url:r.href}};class eu{updatedURLs=[];notUpdatedURLs=[];handlerWillStart=async({request:e,state:t})=>{t&&(t.originalRequest=e)};cachedResponseWillBeUsed=async({event:e,state:t,cachedResponse:a})=>{if("install"===e.type&&t?.originalRequest&&t.originalRequest instanceof Request){let e=t.originalRequest.url;a?this.notUpdatedURLs.push(e):this.updatedURLs.push(e)}return a}}"u">typeof navigator&&/^((?!chrome|android).)*safari/i.test(navigator.userAgent);let ed="cache-entries",em=e=>{let t=new URL(e,location.href);return t.hash="",t.href};class ef{_cacheName;_db=null;constructor(e){this._cacheName=e}_getId(e){return`${this._cacheName}|${em(e)}`}_upgradeDb(e){let t=e.createObjectStore(ed,{keyPath:"id"});t.createIndex("cacheName","cacheName",{unique:!1}),t.createIndex("timestamp","timestamp",{unique:!1})}_upgradeDbAndDeleteOldDbs(e){this._upgradeDb(e),this._cacheName&&function(e,{blocked:t}={}){let a=indexedDB.deleteDatabase(e);t&&a.addEventListener("blocked",e=>t(e.oldVersion,e)),S(a).then(()=>void 0)}(this._cacheName)}async setTimestamp(e,t){e=em(e);let a={id:this._getId(e),cacheName:this._cacheName,url:e,timestamp:t},s=(await this.getDb()).transaction(ed,"readwrite",{durability:"relaxed"});await s.store.put(a),await s.done}async getTimestamp(e){let t=await this.getDb(),a=await t.get(ed,this._getId(e));return a?.timestamp}async expireEntries(e,t){let a=await this.getDb(),s=await a.transaction(ed,"readwrite").store.index("timestamp").openCursor(null,"prev"),r=[],n=0;for(;s;){let a=s.value;a.cacheName===this._cacheName&&(e&&a.timestamp<e||t&&n>=t?(s.delete(),r.push(a.url)):n++),s=await s.continue()}return r}async getDb(){return this._db||(this._db=await D("serwist-expiration",1,{upgrade:this._upgradeDbAndDeleteOldDbs.bind(this)})),this._db}}class eg{_isRunning=!1;_rerunRequested=!1;_maxEntries;_maxAgeSeconds;_matchOptions;_cacheName;_timestampModel;constructor(e,t={}){this._maxEntries=t.maxEntries,this._maxAgeSeconds=t.maxAgeSeconds,this._matchOptions=t.matchOptions,this._cacheName=e,this._timestampModel=new ef(e)}async expireEntries(){if(this._isRunning){this._rerunRequested=!0;return}this._isRunning=!0;let e=this._maxAgeSeconds?Date.now()-1e3*this._maxAgeSeconds:0,t=await this._timestampModel.expireEntries(e,this._maxEntries),a=await self.caches.open(this._cacheName);for(let e of t)await a.delete(e,this._matchOptions);this._isRunning=!1,this._rerunRequested&&(this._rerunRequested=!1,this.expireEntries())}async updateTimestamp(e){await this._timestampModel.setTimestamp(e,Date.now())}async isURLExpired(e){if(!this._maxAgeSeconds)return!1;let t=await this._timestampModel.getTimestamp(e),a=Date.now()-1e3*this._maxAgeSeconds;return void 0===t||t<a}async delete(){this._rerunRequested=!1,await this._timestampModel.expireEntries(1/0)}}class ew{_config;_cacheExpirations;constructor(e={}){this._config=e,this._cacheExpirations=new Map,this._config.maxAgeFrom||(this._config.maxAgeFrom="last-fetched"),this._config.purgeOnQuotaError&&(e=>{m.add(e)})(()=>this.deleteCacheAndMetadata())}_getCacheExpiration(e){if(e===h())throw new u("expire-custom-caches-only");let t=this._cacheExpirations.get(e);return t||(t=new eg(e,this._config),this._cacheExpirations.set(e,t)),t}cachedResponseWillBeUsed({event:e,cacheName:t,request:a,cachedResponse:s}){if(!s)return null;let r=this._isResponseDateFresh(s),n=this._getCacheExpiration(t),i="last-used"===this._config.maxAgeFrom,c=(async()=>{i&&await n.updateTimestamp(a.url),await n.expireEntries()})();try{e.waitUntil(c)}catch{}return r?s:null}_isResponseDateFresh(e){if("last-used"===this._config.maxAgeFrom)return!0;let t=Date.now();if(!this._config.maxAgeSeconds)return!0;let a=this._getDateHeaderTimestamp(e);return null===a||a>=t-1e3*this._config.maxAgeSeconds}_getDateHeaderTimestamp(e){if(!e.headers.has("date"))return null;let t=new Date(e.headers.get("date")).getTime();return Number.isNaN(t)?null:t}async cacheDidUpdate({cacheName:e,request:t}){let a=this._getCacheExpiration(e);await a.updateTimestamp(t.url),await a.expireEntries()}async deleteCacheAndMetadata(){for(let[e,t]of this._cacheExpirations)await self.caches.delete(e),await t.delete();this._cacheExpirations=new Map}}let ep=async(e,t)=>{try{if(206===t.status)return t;let a=e.headers.get("range");if(!a)throw new u("no-range-header");let s=(e=>{let t=e.trim().toLowerCase();if(!t.startsWith("bytes="))throw new u("unit-must-be-bytes",{normalizedRangeHeader:t});if(t.includes(","))throw new u("single-range-only",{normalizedRangeHeader:t});let a=/(\d*)-(\d*)/.exec(t);if(!a||!(a[1]||a[2]))throw new u("invalid-range-values",{normalizedRangeHeader:t});return{start:""===a[1]?void 0:Number(a[1]),end:""===a[2]?void 0:Number(a[2])}})(a),r=await t.blob(),n=((e,t,a)=>{let s,r,n=e.size;if(a&&a>n||t&&t<0)throw new u("range-not-satisfiable",{size:n,end:a,start:t});return void 0!==t&&void 0!==a?(s=t,r=a+1):void 0!==t&&void 0===a?(s=t,r=n):void 0!==a&&void 0===t&&(s=n-a,r=n),{start:s,end:r}})(r,s.start,s.end),i=r.slice(n.start,n.end),c=i.size,o=new Response(i,{status:206,statusText:"Partial Content",headers:t.headers});return o.headers.set("Content-Length",String(c)),o.headers.set("Content-Range",`bytes ${n.start}-${n.end-1}/${r.size}`),o}catch(e){return new Response("",{status:416,statusText:"Range Not Satisfiable"})}};class ey{cachedResponseWillBeUsed=async({request:e,cachedResponse:t})=>t&&e.headers.has("range")?await ep(e,t):t}class e_ extends et{async _handle(e,t){let a,s=await t.cacheMatch(e);if(!s)try{s=await t.fetchAndCachePut(e)}catch(e){e instanceof Error&&(a=e)}if(!s)throw new u("no-response",{url:e.url,error:a});return s}}class ex extends et{constructor(e={}){super(e),this.plugins.some(e=>"cacheWillUpdate"in e)||this.plugins.unshift(Y)}async _handle(e,t){let a,s=t.fetchAndCachePut(e).catch(()=>{});t.waitUntil(s);let r=await t.cacheMatch(e);if(r);else try{r=await s}catch(e){e instanceof Error&&(a=e)}if(!r)throw new u("no-response",{url:e.url,error:a});return r}}let eb=[{matcher:/^https:\/\/fonts\.(?:gstatic)\.com\/.*/i,handler:new e_({cacheName:"google-fonts-webfonts",plugins:[new ew({maxEntries:4,maxAgeSeconds:31536e3,maxAgeFrom:"last-used"})]})},{matcher:/^https:\/\/fonts\.(?:googleapis)\.com\/.*/i,handler:new ex({cacheName:"google-fonts-stylesheets",plugins:[new ew({maxEntries:4,maxAgeSeconds:604800,maxAgeFrom:"last-used"})]})},{matcher:/\.(?:eot|otf|ttc|ttf|woff|woff2|font.css)$/i,handler:new ex({cacheName:"static-font-assets",plugins:[new ew({maxEntries:4,maxAgeSeconds:604800,maxAgeFrom:"last-used"})]})},{matcher:/\.(?:jpg|jpeg|gif|png|svg|ico|webp)$/i,handler:new ex({cacheName:"static-image-assets",plugins:[new ew({maxEntries:64,maxAgeSeconds:2592e3,maxAgeFrom:"last-used"})]})},{matcher:/\/_next\/static.+\.js$/i,handler:new e_({cacheName:"next-static-js-assets",plugins:[new ew({maxEntries:64,maxAgeSeconds:86400,maxAgeFrom:"last-used"})]})},{matcher:/\/_next\/image\?url=.+$/i,handler:new ex({cacheName:"next-image",plugins:[new ew({maxEntries:64,maxAgeSeconds:86400,maxAgeFrom:"last-used"})]})},{matcher:/\.(?:mp3|wav|ogg)$/i,handler:new e_({cacheName:"static-audio-assets",plugins:[new ew({maxEntries:32,maxAgeSeconds:86400,maxAgeFrom:"last-used"}),new ey]})},{matcher:/\.(?:mp4|webm)$/i,handler:new e_({cacheName:"static-video-assets",plugins:[new ew({maxEntries:32,maxAgeSeconds:86400,maxAgeFrom:"last-used"}),new ey]})},{matcher:/\.(?:js)$/i,handler:new ex({cacheName:"static-js-assets",plugins:[new ew({maxEntries:48,maxAgeSeconds:86400,maxAgeFrom:"last-used"})]})},{matcher:/\.(?:css|less)$/i,handler:new ex({cacheName:"static-style-assets",plugins:[new ew({maxEntries:32,maxAgeSeconds:86400,maxAgeFrom:"last-used"})]})},{matcher:/\/_next\/data\/.+\/.+\.json$/i,handler:new ea({cacheName:"next-data",plugins:[new ew({maxEntries:32,maxAgeSeconds:86400,maxAgeFrom:"last-used"})]})},{matcher:/\.(?:json|xml|csv)$/i,handler:new ea({cacheName:"static-data-assets",plugins:[new ew({maxEntries:32,maxAgeSeconds:86400,maxAgeFrom:"last-used"})]})},{matcher:/\/api\/auth\/.*/,handler:new es({networkTimeoutSeconds:10})},{matcher:({sameOrigin:e,url:{pathname:t}})=>e&&t.startsWith("/api/"),method:"GET",handler:new ea({cacheName:"apis",plugins:[new ew({maxEntries:16,maxAgeSeconds:86400,maxAgeFrom:"last-used"})],networkTimeoutSeconds:10})},{matcher:({request:e,url:{pathname:t},sameOrigin:a})=>"1"===e.headers.get("RSC")&&"1"===e.headers.get("Next-Router-Prefetch")&&a&&!t.startsWith("/api/"),handler:new ea({cacheName:"pages-rsc-prefetch",plugins:[new ew({maxEntries:32,maxAgeSeconds:86400})]})},{matcher:({request:e,url:{pathname:t},sameOrigin:a})=>"1"===e.headers.get("RSC")&&a&&!t.startsWith("/api/"),handler:new ea({cacheName:"pages-rsc",plugins:[new ew({maxEntries:32,maxAgeSeconds:86400})]})},{matcher:({request:e,url:{pathname:t},sameOrigin:a})=>e.headers.get("Content-Type")?.includes("text/html")&&a&&!t.startsWith("/api/"),handler:new ea({cacheName:"pages",plugins:[new ew({maxEntries:32,maxAgeSeconds:86400})]})},{matcher:({url:{pathname:e},sameOrigin:t})=>t&&!e.startsWith("/api/"),handler:new ea({cacheName:"others",plugins:[new ew({maxEntries:32,maxAgeSeconds:86400})]})},{matcher:({sameOrigin:e})=>!e,handler:new ea({cacheName:"cross-origin",plugins:[new ew({maxEntries:32,maxAgeSeconds:3600})],networkTimeoutSeconds:10})},{matcher:/.*/i,method:"GET",handler:new es}],eE=async(e,t,a)=>{let s=t.map((e,t)=>({index:t,item:e})),r=async e=>{let t=[];for(;;){let r=s.pop();if(!r)return e(t);let n=await a(r.item);t.push({result:n,index:r.index})}},n=Array.from({length:e},()=>new Promise(r));return(await Promise.all(n)).flat().sort((e,t)=>e.index<t.index?-1:1).map(e=>e.result)};class ev{_precacheController;constructor({precacheController:e}){this._precacheController=e}cacheKeyWillBeUsed=async({request:e,params:t})=>{let a=t?.cacheKey||this._precacheController.getCacheKeyForURL(e.url);return a?new Request(a,{headers:e.headers}):e}}class eR{_installAndActiveListenersAdded;_concurrentPrecaching;_strategy;_urlsToCacheKeys=new Map;_urlsToCacheModes=new Map;_cacheKeysToIntegrities=new Map;constructor({cacheName:e,plugins:t=[],fallbackToNetwork:a=!0,concurrentPrecaching:s=1}={}){this._concurrentPrecaching=s,this._strategy=new ei({cacheName:l(e),plugins:[...t,new ev({precacheController:this})],fallbackToNetwork:a}),this.install=this.install.bind(this),this.activate=this.activate.bind(this)}get strategy(){return this._strategy}precache(e){this.addToCacheList(e),this._installAndActiveListenersAdded||(self.addEventListener("install",this.install),self.addEventListener("activate",this.activate),this._installAndActiveListenersAdded=!0)}addToCacheList(e){let t=[];for(let a of e){"string"==typeof a?t.push(a):a&&!a.integrity&&void 0===a.revision&&t.push(a.url);let{cacheKey:e,url:s}=eh(a),r="string"!=typeof a&&a.revision?"reload":"default";if(this._urlsToCacheKeys.has(s)&&this._urlsToCacheKeys.get(s)!==e)throw new u("add-to-cache-list-conflicting-entries",{firstEntry:this._urlsToCacheKeys.get(s),secondEntry:e});if("string"!=typeof a&&a.integrity){if(this._cacheKeysToIntegrities.has(e)&&this._cacheKeysToIntegrities.get(e)!==a.integrity)throw new u("add-to-cache-list-conflicting-integrities",{url:s});this._cacheKeysToIntegrities.set(e,a.integrity)}this._urlsToCacheKeys.set(s,e),this._urlsToCacheModes.set(s,r),t.length>0&&console.warn(`Serwist is precaching URLs without revision info: ${t.join(", ")}
+This is generally NOT safe. Learn more at https://bit.ly/wb-precache`)}}install(e){return x(e,async()=>{let t=new eu;this.strategy.plugins.push(t),await eE(this._concurrentPrecaching,Array.from(this._urlsToCacheKeys.entries()),async([t,a])=>{let s=this._cacheKeysToIntegrities.get(a),r=this._urlsToCacheModes.get(t),n=new Request(t,{integrity:s,cache:r,credentials:"same-origin"});await Promise.all(this.strategy.handleAll({event:e,request:n,url:new URL(n.url),params:{cacheKey:a}}))});let{updatedURLs:a,notUpdatedURLs:s}=t;return{updatedURLs:a,notUpdatedURLs:s}})}activate(e){return x(e,async()=>{let e=await self.caches.open(this.strategy.cacheName),t=await e.keys(),a=new Set(this._urlsToCacheKeys.values()),s=[];for(let r of t)a.has(r.url)||(await e.delete(r),s.push(r.url));return{deletedCacheRequests:s}})}getURLsToCacheKeys(){return this._urlsToCacheKeys}getCachedURLs(){return[...this._urlsToCacheKeys.keys()]}getCacheKeyForURL(e){let t=new URL(e,location.href);return this._urlsToCacheKeys.get(t.href)}getIntegrityForCacheKey(e){return this._cacheKeysToIntegrities.get(e)}async matchPrecache(e){let t=e instanceof Request?e.url:e,a=this.getCacheKeyForURL(t);if(a)return(await self.caches.open(this.strategy.cacheName)).match(a)}createHandlerBoundToURL(e){let t=this.getCacheKeyForURL(e);if(!t)throw new u("non-precached-url",{url:e});return a=>(a.request=new Request(e),a.params={cacheKey:t,...a.params},this.strategy.handle(a))}}let eq=()=>(n||(n=new eR),n);class eS extends en{constructor(e,t){super(({request:a})=>{let s=e.getURLsToCacheKeys();for(let r of eo(a.url,t)){let t=s.get(r);if(t){let a=e.getIntegrityForCacheKey(t);return{cacheKey:t,integrity:a}}}},e.strategy)}}class eC{_routes;_defaultHandlerMap;_fetchListenerHandler=null;_cacheListenerHandler=null;_catchHandler;constructor(){this._routes=new Map,this._defaultHandlerMap=new Map}get routes(){return this._routes}addFetchListener(){this._fetchListenerHandler||(this._fetchListenerHandler=e=>{let{request:t}=e,a=this.handleRequest({request:t,event:e});a&&e.respondWith(a)},self.addEventListener("fetch",this._fetchListenerHandler))}removeFetchListener(){this._fetchListenerHandler&&(self.removeEventListener("fetch",this._fetchListenerHandler),this._fetchListenerHandler=null)}addCacheListener(){this._cacheListenerHandler||(this._cacheListenerHandler=e=>{if(e.data&&"CACHE_URLS"===e.data.type){let{payload:t}=e.data,a=Promise.all(t.urlsToCache.map(t=>{"string"==typeof t&&(t=[t]);let a=new Request(...t);return this.handleRequest({request:a,event:e})}));e.waitUntil(a),e.ports?.[0]&&a.then(()=>e.ports[0].postMessage(!0))}},self.addEventListener("message",this._cacheListenerHandler))}removeCacheListener(){this._cacheListenerHandler&&self.removeEventListener("message",this._cacheListenerHandler)}handleRequest({request:e,event:t}){let a,s=new URL(e.url,location.href);if(!s.protocol.startsWith("http"))return;let r=s.origin===location.origin,{params:n,route:i}=this.findMatchingRoute({event:t,request:e,sameOrigin:r,url:s}),c=i?.handler,o=e.method;if(!c&&this._defaultHandlerMap.has(o)&&(c=this._defaultHandlerMap.get(o)),!c)return;try{a=c.handle({url:s,request:e,event:t,params:n})}catch(e){a=Promise.reject(e)}let l=i?.catchHandler;return a instanceof Promise&&(this._catchHandler||l)&&(a=a.catch(async a=>{if(l)try{return await l.handle({url:s,request:e,event:t,params:n})}catch(e){e instanceof Error&&(a=e)}if(this._catchHandler)return this._catchHandler.handle({url:s,request:e,event:t});throw a})),a}findMatchingRoute({url:e,sameOrigin:t,request:a,event:s}){for(let r of this._routes.get(a.method)||[]){let n,i=r.match({url:e,sameOrigin:t,request:a,event:s});if(i)return Array.isArray(n=i)&&0===n.length||i.constructor===Object&&0===Object.keys(i).length?n=void 0:"boolean"==typeof i&&(n=void 0),{route:r,params:n}}return{}}setDefaultHandler(e,t="GET"){this._defaultHandlerMap.set(t,er(e))}setCatchHandler(e){this._catchHandler=er(e)}registerCapture(e,t,a){let s=((e,t,a)=>{if("string"==typeof e){let s=new URL(e,location.href);return new en(({url:e})=>e.href===s.href,t,a)}if(e instanceof RegExp)return new el(e,t,a);if("function"==typeof e)return new en(e,t,a);if(e instanceof en)return e;throw new u("unsupported-route-type",{moduleName:"serwist",funcName:"parseRoute",paramName:"capture"})})(e,t,a);return this.registerRoute(s),s}registerRoute(e){this._routes.has(e.method)||this._routes.set(e.method,[]),this._routes.get(e.method).push(e)}unregisterRoute(e){if(!this._routes.has(e.method))throw new u("unregister-route-but-not-found-with-method",{method:e.method});let t=this._routes.get(e.method).indexOf(e);if(t>-1)this._routes.get(e.method).splice(t,1);else throw new u("unregister-route-route-not-registered")}}let eD=()=>(i||((i=new eC).addFetchListener(),i.addCacheListener()),i),eL=(e,t,a)=>eD().registerCapture(e,t,a);class eN{_fallbackUrls;_precacheController;constructor({fallbackUrls:e,precacheController:t}){this._fallbackUrls=e,this._precacheController=t||eq()}async handlerDidError(e){for(let t of this._fallbackUrls)if("string"==typeof t){let e=await this._precacheController.matchPrecache(t);if(void 0!==e)return e}else if(t.matcher(e)){let e=await this._precacheController.matchPrecache(t.url);if(void 0!==e)return e}}}let eT="www.google-analytics.com",eA="www.googletagmanager.com",ek=/^\/(\w+\/)?collect/,eP=({router:e=eD(),cacheName:t,...a}={})=>{let s,r,n=t||o(c.googleAnalytics),i=new X("serwist-google-analytics",{maxRetentionTime:2880,onSync:async({queue:e})=>{let t;for(;t=await e.shiftRequest();){let{request:s,timestamp:r}=t,n=new URL(s.url);try{let e="POST"===s.method?new URLSearchParams(await s.clone().text()):n.searchParams,t=r-(Number(e.get("qt"))||0),i=Date.now()-t;if(e.set("qt",String(i)),a.parameterOverrides)for(let t of Object.keys(a.parameterOverrides)){let s=a.parameterOverrides[t];e.set(t,s)}"function"==typeof a.hitFilter&&a.hitFilter.call(null,e),await fetch(new Request(n.origin+n.pathname,{body:e.toString(),method:"POST",mode:"cors",credentials:"omit",headers:{"Content-Type":"text/plain"}}))}catch(a){throw await e.unshiftRequest(t),a}}}});for(let t of[new en(({url:e})=>e.hostname===eA&&"/gtm.js"===e.pathname,new ea({cacheName:n}),"GET"),new en(({url:e})=>e.hostname===eT&&"/analytics.js"===e.pathname,new ea({cacheName:n}),"GET"),new en(({url:e})=>e.hostname===eA&&"/gtag/js"===e.pathname,new ea({cacheName:n}),"GET"),new en(s=({url:e})=>e.hostname===eT&&ek.test(e.pathname),r=new es({plugins:[i]}),"GET"),new en(s,r,"POST")])e.registerRoute(t)};(({precacheController:e=eq(),router:t=eD(),precacheEntries:a,precacheOptions:s,cleanupOutdatedCaches:r,navigateFallback:n,navigateFallbackAllowlist:i,navigateFallbackDenylist:o,skipWaiting:h,importScripts:u,navigationPreload:d=!1,cacheId:m,clientsClaim:f=!1,runtimeCaching:g,offlineAnalyticsConfig:w,disableDevLogs:p=!1,fallbacks:y})=>{u&&u.length>0&&self.importScripts(...u),d&&self.registration?.navigationPreload&&self.addEventListener("activate",e=>{e.waitUntil(self.registration.navigationPreload.enable().then(()=>{}))}),void 0!==m&&(e=>{for(let t of Object.keys(c))(t=>{let a=e[t];"string"==typeof a&&(c[t]=a)})(t)})({prefix:m}),h?self.skipWaiting():self.addEventListener("message",e=>{e.data&&"SKIP_WAITING"===e.data.type&&self.skipWaiting()}),f&&self.addEventListener("activate",()=>self.clients.claim()),(({precacheController:e=eq(),router:t=eD(),precacheEntries:a,precacheOptions:s,cleanupOutdatedCaches:r=!1,navigateFallback:n,navigateFallbackAllowlist:i,navigateFallbackDenylist:c})=>{a&&a.length>0&&(e.precache(a),t.registerRoute(new eS(e,s)),r&&self.addEventListener("activate",e=>{e.waitUntil(_(l(void 0)).then(e=>{}))}),n&&t.registerRoute(new ec(eq().createHandlerBoundToURL(n),{allowlist:i,denylist:c})))})({precacheController:e,router:t,precacheEntries:a,precacheOptions:s,cleanupOutdatedCaches:r,navigateFallback:n,navigateFallbackAllowlist:i,navigateFallbackDenylist:o}),void 0!==g&&(void 0!==y&&(g=(({precacheController:e=eq(),router:t=eD(),runtimeCaching:a,entries:s,precacheOptions:r})=>{e.precache(s),t.registerRoute(new eS(e,r));let n=new eN({fallbackUrls:s});return a.forEach(e=>{e.handler instanceof et&&!e.handler.plugins.some(e=>"handlerDidError"in e)&&e.handler.plugins.push(n)}),a})({precacheController:e,router:t,runtimeCaching:g,entries:y.entries,precacheOptions:s})),((...e)=>{for(let t of e)eL(t.matcher,t.handler,t.method)})(...g)),void 0!==w&&("boolean"==typeof w?w&&eP({router:t}):eP({...w,router:t})),p&&(self.__WB_DISABLE_DEV_LOGS=!0)})({precacheEntries:[{'revision':'50ccf9abebb8e5105e47e3d13533315f','url':'/_next/static/IKjwPPo2_5tM_r0HEoJ5V/_buildManifest.js'},{'revision':'b6652df95db52feb4daf4eca35380933','url':'/_next/static/IKjwPPo2_5tM_r0HEoJ5V/_ssgManifest.js'},{'revision':null,'url':'/_next/static/chunks/4bd1b696-215e5051988c3dde.js'},{'revision':null,'url':'/_next/static/chunks/511-345e08474328e6d1.js'},{'revision':null,'url':'/_next/static/chunks/app/_global-error/page-81e0113016ace2ec.js'},{'revision':null,'url':'/_next/static/chunks/app/_not-found/page-03b40c4202df61a3.js'},{'revision':null,'url':'/_next/static/chunks/app/api/bicis/route-81e0113016ace2ec.js'},{'revision':null,'url':'/_next/static/chunks/app/kanban/page-297cbcca4c99d553.js'},{'revision':null,'url':'/_next/static/chunks/app/layout-553d7eadec2048cb.js'},{'revision':null,'url':'/_next/static/chunks/app/offline/page-81e0113016ace2ec.js'},{'revision':null,'url':'/_next/static/chunks/app/page-81e0113016ace2ec.js'},{'revision':null,'url':'/_next/static/chunks/framework-93cda6578f6c76ec.js'},{'revision':null,'url':'/_next/static/chunks/main-6d77d57f953fb955.js'},{'revision':null,'url':'/_next/static/chunks/main-app-64635f79c6e46e53.js'},{'revision':null,'url':'/_next/static/chunks/next/dist/client/components/builtin/app-error-81e0113016ace2ec.js'},{'revision':null,'url':'/_next/static/chunks/next/dist/client/components/builtin/forbidden-81e0113016ace2ec.js'},{'revision':null,'url':'/_next/static/chunks/next/dist/client/components/builtin/global-error-c2dd7478adb0fd0a.js'},{'revision':null,'url':'/_next/static/chunks/next/dist/client/components/builtin/not-found-81e0113016ace2ec.js'},{'revision':null,'url':'/_next/static/chunks/next/dist/client/components/builtin/unauthorized-81e0113016ace2ec.js'},{'revision':'846118c33b2c0e922d7b3a7676f81f6f','url':'/_next/static/chunks/polyfills-42372ed130431b0a.js'},{'revision':null,'url':'/_next/static/chunks/webpack-5cabf6d6e712aeef.js'},{'revision':null,'url':'/_next/static/css/129ea227865edb9c.css'},{'revision':null,'url':'/_next/static/css/367bc8380115fbd8.css'},{'revision':'d09f95206c3fa0bb9bd9fefabfd0ea71','url':'/file.svg'},{'revision':'2aaafa6a49b6563925fe440891e32717','url':'/globe.svg'},{'revision':'5a4f147a84c743653340db63dc8e0674','url':'/icons/icon-192.png'},{'revision':'b572299acacaf0e6039b525b9c36bb74','url':'/icons/icon-512.png'},{'revision':'26fc3fd70038be204a4fce359ca4bb38','url':'/manifest.json'},{'revision':'8e061864f388b47f33a1c3780831193e','url':'/next.svg'},{'revision':'c0af2f507b369b085b35ef4bbe3bcf1e','url':'/vercel.svg'},{'revision':'a2760511c65806022ad20adf74370ff3','url':'/window.svg'}],skipWaiting:!0,clientsClaim:!0,navigationPreload:!1,runtimeCaching:eb,fallbacks:{entries:[{url:"/offline",matcher:({request:e})=>"document"===e.destination}]}})})();const { PrismaClient } = require("@prisma/client");
+const db = new PrismaClient();
+
+async function main() {
+  const existing = await db.taller.findFirst();
+  if (existing) {
+    console.log("Taller ya existe:", existing.id);
+    return;
+  }
+
+  const taller = await db.taller.create({
+    data: {
+      nombre: "Taller 918",
+      whatsapp: "5491100000000",
+      servicios: {
+        basico:      { precio: 8000,  items: ["Limpieza", "Lubricación cadena", "Ajuste frenos", "Ajuste cambios"] },
+        completo:    { precio: 15000, items: ["Todo lo básico", "Centrado de ruedas", "Limpieza profunda", "Revisión rodamientos"] },
+        premium:     { precio: 25000, items: ["Todo lo completo", "Cambio cables y fundas", "Revisión horquilla", "Informe detallado"] },
+        diagnostico: { precio: 3000,  items: ["Revisión general", "Informe de estado", "Presupuesto de reparación"] },
+      },
+    },
+  });
+
+  console.log("Taller creado:", taller.id);
+}
+
+main()
+  .catch(console.error)
+  .finally(() => db.$disconnect());
+import "./globals.css";
+
+export const metadata = {
+  title: "918",
+  description: "El taller en tu bolsillo",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "918",
+  },
+};
+
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: "cover",
+  themeColor: "#111111",
+};
+
+export default function RootLayout({ children }) {
+  return (
+    <html lang="es">
+      <head>
+        <link
+          href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@300;400;500&display=swap"
+          rel="stylesheet"
+        />
+      </head>
+      <body>{children}</body>
+    </html>
+  );
+}
+'use client'
+
+import { useState, useRef } from 'react'
+import { useRouter } from 'next/navigation'
+import styles from './registro.module.css'
+
+const SERVICIOS = [
+  { id: 'basico',      label: 'Service básico' },
+  { id: 'completo',    label: 'Service completo' },
+  { id: 'premium',     label: 'Service premium' },
+  { id: 'diagnostico', label: 'Solo diagnóstico' },
+]
+
+const PROBLEMAS_TAGS = ['frenos', 'cambios', 'cadena', 'rueda pinchada', 'horquilla']
+
+const WA_PREVIEW = {
+  lista:     (modelo) => `Hola! Tu ${modelo} ya está lista para retirar. Pasá cuando quieras 🚲`,
+  entregada: (modelo) => `Acá tenés el historial completo de todo lo que le hicimos a tu bici: [link]`,
+}
+
+export default function RegistroPage() {
+  const router = useRouter()
+  const [paso, setPaso] = useState(1)
+
+  // ── Paso 1: Cliente ──
+  const [clienteNombre,    setClienteNombre]    = useState('')
+  const [clienteWhatsapp,  setClienteWhatsapp]  = useState('')
+  const [clienteExistente, setClienteExistente] = useState(null)
+
+  // ── Paso 2: Bici y fotos ──
+  const [modelo, setModelo] = useState('')
+  const [color,  setColor]  = useState('')
+  const [fotos, setFotos] = useState([]) // array de base64
+  const fotoRef = useRef(null)
+
+  // ── Paso 3: Motivo ──
+  const [tipoServicio,     setTipoServicio]     = useState('')
+  const [problemasActivos, setProblemasActivos] = useState([])
+  const [notaLibre,        setNotaLibre]        = useState('')
+
+  // ── Global ──
+  const [guardando, setGuardando] = useState(false)
+  const [error,     setError]     = useState(null)
+
+  // ────────────────────────────────────────
+  // PASO 1
+  // ────────────────────────────────────────
+  const handleWhatsappBlur = async () => {
+    const wa = clienteWhatsapp.trim()
+    if (wa.length < 6) return
+    try {
+      const res = await fetch(`/api/clientes?whatsapp=${encodeURIComponent(wa)}`)
+      if (res.ok) {
+        const data = await res.json()
+        if (data?.id) {
+          setClienteExistente(data)
+          setClienteNombre(data.nombre)
+        }
+      }
+    } catch (_) {}
+  }
+
+  const handleContinuarP1 = () => {
+    if (!clienteNombre.trim())   { setError('El nombre es requerido'); return }
+    if (!clienteWhatsapp.trim()) { setError('El WhatsApp es requerido'); return }
+    setError(null)
+    setPaso(2)
+  }
+
+  // ────────────────────────────────────────
+  // PASO 2
+  // ────────────────────────────────────────
+  const handleFoto = (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = ev => {
+      setFotos(prev => [...prev, ev.target.result])
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const fotosCount = fotos.length
+
+  const handleContinuarP2 = () => {
+    if (!modelo.trim()) { setError('El modelo es requerido'); return }
+    setError(null)
+    setPaso(3)
+  }
+
+  // ────────────────────────────────────────
+  // PASO 3
+  // ────────────────────────────────────────
+  const toggleProblema = (tag) => {
+    setProblemasActivos(prev =>
+      prev.includes(tag) ? prev.filter(p => p !== tag) : [...prev, tag]
+    )
+  }
+
+  const handleContinuarP3 = () => {
+    if (!tipoServicio) { setError('Seleccioná un tipo de servicio'); return }
+    setError(null)
+    setPaso(4)
+  }
+
+  // ────────────────────────────────────────
+  // PASO 4: Guardar
+  // ────────────────────────────────────────
+  const handleRegistrar = async () => {
+    setGuardando(true)
+    setError(null)
+    try {
+      const fotosArray = fotos.map((url, i) => ({ angulo: `foto-${i + 1}`, url }))
+
+      const res = await fetch('/api/bicis', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          cliente: {
+            nombre:   clienteNombre.trim(),
+            whatsapp: clienteWhatsapp.trim(),
+          },
+          bici: {
+            modelo:       modelo.trim(),
+            color:        color.trim() || null,
+            tipoServicio: tipoServicio || null,
+            problemas:    problemasActivos,
+            notas:        notaLibre.trim() || null,
+          },
+          fotos: fotosArray,
+        }),
+      })
+
+      if (!res.ok) throw new Error('Error al registrar')
+      router.push('/kanban')
+    } catch (err) {
+      console.error(err)
+      setError('No se pudo registrar. Intentá de nuevo.')
+    } finally {
+      setGuardando(false)
+    }
+  }
+
+  // ────────────────────────────────────────
+  // RENDER
+  // ────────────────────────────────────────
+  return (
+    <div className={styles.page}>
+
+      {/* Header */}
+      <div className={styles.header}>
+        <button
+          className={styles.btnBack}
+          onClick={() => paso > 1 ? (setError(null), setPaso(p => p - 1)) : router.push('/kanban')}
+        >
+          ←
+        </button>
+        <span className={styles.headerTitle}>Nueva bici</span>
+        <span className={styles.headerStep}>{paso} / 4</span>
+      </div>
+
+      <div className={styles.body}>
+
+        {error && <div className={styles.banner}>{error}</div>}
+
+        {/* ── PASO 1: Cliente ── */}
+        {paso === 1 && (
+          <div className={styles.paso}>
+            <div className={styles.seccionLabel}>Datos del cliente</div>
+
+            <div className={styles.campo}>
+              <label className={styles.campoLabel}>WhatsApp</label>
+              <div className={styles.waWrap}>
+                <span className={styles.waPrefijo}>+54</span>
+                <input
+                  className={styles.waInput}
+                  type="tel"
+                  inputMode="numeric"
+                  placeholder="11 5823 4480"
+                  value={clienteWhatsapp}
+                  onChange={e => { setClienteWhatsapp(e.target.value); setClienteExistente(null) }}
+                  onBlur={handleWhatsappBlur}
+                />
+              </div>
+              <div className={styles.hint}>Se usa para notificaciones automáticas.</div>
+            </div>
+
+            {clienteExistente && (
+              <div className={styles.clienteEncontrado}>
+                <span className={styles.clienteEncontradoDot} />
+                <div className={styles.clienteEncontradoInfo}>
+                  <div className={styles.clienteEncontradoNombre}>{clienteExistente.nombre}</div>
+                  <div className={styles.clienteEncontradoMeta}>Cliente encontrado · sus datos ya están cargados.</div>
+                </div>
+                <span className={styles.badgeRecurrente}>recurrente</span>
+              </div>
+            )}
+
+            <div className={styles.campo}>
+              <label className={styles.campoLabel}>Nombre</label>
+              <input
+                className={styles.input}
+                type="text"
+                placeholder="Nombre del cliente"
+                value={clienteNombre}
+                onChange={e => setClienteNombre(e.target.value)}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* ── PASO 2: Bici y fotos ── */}
+        {paso === 2 && (
+          <div className={styles.paso}>
+
+            <div className={styles.seccionLabel}>Fotos de recepción</div>
+            <input
+              ref={fotoRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              className={styles.fotoInputHidden}
+              onChange={handleFoto}
+            />
+            <div className={styles.fotosWrap}>
+              {fotos.map((src, i) => (
+                <img key={i} src={src} alt="" className={styles.fotoThumb} />
+              ))}
+              <button
+                className={styles.fotoBtnSacar}
+                onClick={() => fotoRef.current?.click()}
+              >
+                <span className={styles.fotoCamara}>📷</span>
+                <span className={styles.fotoLabel}>
+                  {fotosCount === 0 ? 'Sacar foto' : '+ Otra'}
+                </span>
+              </button>
+            </div>
+            {fotosCount > 0 && (
+              <div className={styles.hint}>{fotosCount} foto{fotosCount > 1 ? 's' : ''} tomada{fotosCount > 1 ? 's' : ''}.</div>
+            )}
+
+            <div className={styles.seccionLabel} style={{ marginTop: 24 }}>Modelo</div>
+            <div className={styles.campo}>
+              <input
+                className={styles.input}
+                type="text"
+                placeholder="Trek Marlin 7, Specialized Rockhopper…"
+                value={modelo}
+                onChange={e => setModelo(e.target.value)}
+                autoComplete="off"
+              />
+            </div>
+
+            <div className={styles.campo}>
+              <label className={styles.campoLabel}>Color</label>
+              <input
+                className={styles.input}
+                type="text"
+                placeholder="Negro, Azul mate…"
+                value={color}
+                onChange={e => setColor(e.target.value)}
+              />
+            </div>
+
+          </div>
+        )}
+
+        {/* ── PASO 3: Motivo ── */}
+        {paso === 3 && (
+          <div className={styles.paso}>
+
+            <div className={styles.seccionLabel}>Tipo de servicio</div>
+            <div className={styles.serviciosGrid}>
+              {SERVICIOS.map(s => (
+                <button
+                  key={s.id}
+                  className={`${styles.servicioBtn} ${tipoServicio === s.id ? styles.servicioBtnActivo : ''}`}
+                  onClick={() => setTipoServicio(s.id)}
+                >
+                  {s.label}
+                </button>
+              ))}
+            </div>
+
+            <div className={styles.seccionLabel} style={{ marginTop: 24 }}>Problema puntual</div>
+            <div className={styles.tagsWrap}>
+              {PROBLEMAS_TAGS.map(tag => (
+                <button
+                  key={tag}
+                  className={`${styles.tag} ${problemasActivos.includes(tag) ? styles.tagActivo : ''}`}
+                  onClick={() => toggleProblema(tag)}
+                >
+                  {tag}
+                </button>
+              ))}
+            </div>
+
+            <div className={styles.campo} style={{ marginTop: 20 }}>
+              <label className={styles.campoLabel}>— o describilo con tus palabras —</label>
+              <textarea
+                className={styles.textarea}
+                placeholder="Ej: el freno trasero no agarra bien…"
+                value={notaLibre}
+                onChange={e => setNotaLibre(e.target.value)}
+                rows={3}
+              />
+            </div>
+
+          </div>
+        )}
+
+        {/* ── PASO 4: Confirmación ── */}
+        {paso === 4 && (
+          <div className={styles.paso}>
+
+            <div className={styles.seccionLabel}>Resumen</div>
+            <div className={styles.resumenCard}>
+              <div className={styles.resumenFila}>
+                <span className={styles.resumenKey}>Cliente</span>
+                <div className={styles.resumenValWrap}>
+                  <span className={styles.resumenVal}>{clienteNombre}</span>
+                  {clienteExistente && <span className={styles.badgeRecurrente}>recurrente</span>}
+                </div>
+              </div>
+              <div className={styles.resumenFila}>
+                <span className={styles.resumenKey}>WhatsApp</span>
+                <span className={styles.resumenVal}>+54 {clienteWhatsapp}</span>
+              </div>
+              <div className={styles.resumenFila}>
+                <span className={styles.resumenKey}>Bici</span>
+                <span className={styles.resumenVal}>{modelo}{color ? ` · ${color}` : ''}</span>
+              </div>
+              <div className={styles.resumenFila}>
+                <span className={styles.resumenKey}>Servicio</span>
+                <span className={styles.resumenVal}>
+                  {SERVICIOS.find(s => s.id === tipoServicio)?.label || '—'}
+                  {problemasActivos.length > 0 && ` · ${problemasActivos.join(', ')}`}
+                </span>
+              </div>
+              {fotosCount > 0 && (
+                <div className={styles.resumenFila}>
+                  <span className={styles.resumenKey}>Fotos</span>
+                  <span className={styles.resumenVal}>{fotosCount} tomadas</span>
+                </div>
+              )}
+            </div>
+
+            <div className={styles.seccionLabel} style={{ marginTop: 24 }}>WhatsApp automáticos</div>
+            <div className={styles.waPreviewCard}>
+              <div className={styles.waPreviewLabel}>Al mover a "Lista"</div>
+              <div className={styles.waPreviewMsg}>{WA_PREVIEW.lista(modelo)}</div>
+            </div>
+            <div className={styles.waPreviewCard} style={{ marginTop: 8 }}>
+              <div className={styles.waPreviewLabel}>Al entregar</div>
+              <div className={styles.waPreviewMsg}>{WA_PREVIEW.entregada(modelo)}</div>
+            </div>
+
+          </div>
+        )}
+
+      </div>
+
+      {/* Footer */}
+      <div className={styles.footer}>
+        {paso === 1 && (
+          <button className={styles.btnPrimario} onClick={handleContinuarP1}>
+            Continuar →
+          </button>
+        )}
+        {paso === 2 && (
+          <>
+            <button className={styles.btnSecundario} onClick={() => { setError(null); setPaso(3) }}>
+              Saltar
+            </button>
+            <button className={styles.btnPrimario} onClick={handleContinuarP2}>
+              Continuar →
+            </button>
+          </>
+        )}
+        {paso === 3 && (
+          <>
+            <button className={styles.btnSecundario} onClick={() => { setError(null); setPaso(4) }}>
+              Omitir
+            </button>
+            <button className={styles.btnPrimario} onClick={handleContinuarP3}>
+              Continuar →
+            </button>
+          </>
+        )}
+        {paso === 4 && (
+          <>
+            <button className={styles.btnSecundario} onClick={() => { setError(null); setPaso(3) }}>
+              Editar
+            </button>
+            <button
+              className={styles.btnPrimario}
+              onClick={handleRegistrar}
+              disabled={guardando}
+            >
+              {guardando ? 'Registrando…' : 'Registrar bici ✓'}
+            </button>
+          </>
+        )}
+      </div>
+
+    </div>
+  )
+}
+import { redirect } from "next/navigation";
+
+export default function Home() {
+  redirect("/kanban");
+}
+'use client'
+
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import styles from './configuracion.module.css'
+
+const SERVICIOS_DEFAULT = [
+  {
+    id:     'basico',
+    nombre: 'Service básico',
+    precio: 8000,
+    items: [
+      { label: 'Limpieza general',       activo: true },
+      { label: 'Lubricación de cadena',  activo: true },
+      { label: 'Ajuste de frenos',       activo: true },
+      { label: 'Inflado de cubiertas',   activo: true },
+      { label: 'Ajuste de cambios',      activo: true },
+    ],
+  },
+  {
+    id:     'completo',
+    nombre: 'Service completo',
+    precio: 18000,
+    items: [
+      { label: 'Todo el service básico',           activo: true },
+      { label: 'Revisión de rodamientos',          activo: true },
+      { label: 'Centrado de ruedas',               activo: true },
+      { label: 'Revisión de dirección',            activo: true },
+      { label: 'Limpieza profunda de transmisión', activo: true },
+    ],
+  },
+  {
+    id:     'premium',
+    nombre: 'Service premium',
+    precio: 35000,
+    items: [
+      { label: 'Todo el service completo',       activo: true },
+      { label: 'Desarmado completo',             activo: true },
+      { label: 'Cambio de cables y fundas',      activo: true },
+      { label: 'Revisión y ajuste de horquilla', activo: true },
+      { label: 'Pulido de aros',                 activo: true },
+    ],
+  },
+  {
+    id:     'diagnostico',
+    nombre: 'Solo diagnóstico',
+    precio: 3500,
+    items: [
+      { label: 'Inspección visual completa', activo: true },
+      { label: 'Informe de estado',          activo: true },
+      { label: 'Presupuesto detallado',      activo: true },
+    ],
+  },
+]
+
+export default function ConfiguracionPage() {
+  const router = useRouter()
+
+  const [cargando,  setCargando]  = useState(true)
+  const [guardando, setGuardando] = useState(false)
+  const [error,     setError]     = useState(null)
+  const [exito,     setExito]     = useState(false)
+
+  const [nombre,    setNombre]    = useState('')
+  const [servicios, setServicios] = useState([])
+
+  // Servicio expandido actualmente (índice o null)
+  const [expandido, setExpandido] = useState(null)
+
+  // ── Cargar taller ──
+  useEffect(() => {
+    async function cargar() {
+      try {
+        const res = await fetch('/api/taller')
+        if (!res.ok) throw new Error('No se pudo cargar el taller')
+        const data = await res.json()
+        setNombre(data.nombre || '')
+        setServicios(Array.isArray(data.servicios) ? data.servicios : [])
+      } catch (err) {
+        console.error(err)
+        setError('No se pudo cargar la configuración.')
+      } finally {
+        setCargando(false)
+      }
+    }
+    cargar()
+  }, [])
+
+  // ── Servicios helpers ──
+  const handlePrecioChange = (idx, val) => {
+    const nuevo = [...servicios]
+    nuevo[idx] = { ...nuevo[idx], precio: Number(val) || 0 }
+    setServicios(nuevo)
+  }
+
+  const handleItemToggle = (sIdx, iIdx) => {
+    const nuevo = [...servicios]
+    const items = [...nuevo[sIdx].items]
+    items[iIdx] = { ...items[iIdx], activo: !items[iIdx].activo }
+    nuevo[sIdx] = { ...nuevo[sIdx], items }
+    setServicios(nuevo)
+  }
+
+  const handleAgregarItem = (sIdx) => {
+    const label = window.prompt('Nombre del ítem:')
+    if (!label?.trim()) return
+    const nuevo = [...servicios]
+    nuevo[sIdx] = {
+      ...nuevo[sIdx],
+      items: [...nuevo[sIdx].items, { label: label.trim(), activo: true }],
+    }
+    setServicios(nuevo)
+  }
+
+  const handleEliminarItem = (sIdx, iIdx) => {
+    const nuevo = [...servicios]
+    const items = nuevo[sIdx].items.filter((_, i) => i !== iIdx)
+    nuevo[sIdx] = { ...nuevo[sIdx], items }
+    setServicios(nuevo)
+  }
+
+  // ── Guardar ──
+  const handleGuardar = async () => {
+    if (!nombre.trim()) { setError('El nombre no puede estar vacío'); return }
+    setGuardando(true)
+    setError(null)
+    setExito(false)
+    try {
+      const res = await fetch('/api/taller', {
+        method:  'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ nombre: nombre.trim(), servicios }),
+      })
+      if (!res.ok) throw new Error('Error al guardar')
+      setExito(true)
+      setTimeout(() => setExito(false), 2500)
+    } catch (err) {
+      console.error(err)
+      setError('No se pudo guardar. Intentá de nuevo.')
+    } finally {
+      setGuardando(false)
+    }
+  }
+
+  // ── Loading ──
+  if (cargando) {
+    return (
+      <div className={styles.loading}>
+        <div className={styles.spinner} />
+        <span>Cargando configuración…</span>
+      </div>
+    )
+  }
+
+  return (
+    <div className={styles.page}>
+
+      {/* Header */}
+      <div className={styles.header}>
+        <button className={styles.btnBack} onClick={() => router.push('/kanban')}>
+          ←
+        </button>
+        <span className={styles.headerTitle}>Configuración</span>
+        <button
+          className={styles.btnGuardar}
+          onClick={handleGuardar}
+          disabled={guardando}
+        >
+          {guardando ? '…' : exito ? '✓' : 'Guardar'}
+        </button>
+      </div>
+
+      <div className={styles.body}>
+
+        {/* Feedback */}
+        {error  && <div className={styles.banner + ' ' + styles.bannerError}>{error}</div>}
+        {exito  && <div className={styles.banner + ' ' + styles.bannerExito}>Cambios guardados</div>}
+
+        {/* Sección: Taller */}
+        <div className={styles.seccion}>
+          <div className={styles.seccionLabel}>Taller</div>
+          <div className={styles.campo}>
+            <label className={styles.campoLabel}>Nombre</label>
+            <input
+              className={styles.input}
+              type="text"
+              value={nombre}
+              onChange={e => setNombre(e.target.value)}
+              placeholder="Nombre del taller"
+            />
+          </div>
+        </div>
+
+        {/* Sección: Servicios */}
+        <div className={styles.seccion}>
+          <div className={styles.seccionLabel}>Servicios</div>
+
+          {servicios.length === 0 && (
+            <div className={styles.emptyServicios}>
+              <div className={styles.emptyServiciosTexto}>
+                No hay servicios cargados todavía.
+              </div>
+              <button
+                className={styles.btnCargarDefaults}
+                onClick={() => setServicios(SERVICIOS_DEFAULT)}
+              >
+                Cargar servicios por defecto
+              </button>
+              <div className={styles.emptyServiciosHint}>
+                Básico · Completo · Premium · Diagnóstico — podés editar precios e ítems antes de guardar.
+              </div>
+            </div>
+          )}
+
+          {servicios.map((srv, sIdx) => (
+            <div key={srv.id || sIdx} className={styles.servicioCard}>
+
+              {/* Cabecera del servicio */}
+              <button
+                className={styles.servicioCabecera}
+                onClick={() => setExpandido(expandido === sIdx ? null : sIdx)}
+              >
+                <div className={styles.servicioInfo}>
+                  <span className={styles.servicioNombre}>{srv.nombre}</span>
+                  <span className={styles.servicioPrecio}>
+                    ${srv.precio?.toLocaleString('es-AR') ?? 0}
+                  </span>
+                </div>
+                <span className={`${styles.chevron} ${expandido === sIdx ? styles.chevronOpen : ''}`}>
+                  ›
+                </span>
+              </button>
+
+              {/* Panel expandido */}
+              {expandido === sIdx && (
+                <div className={styles.servicioPanel}>
+
+                  {/* Precio */}
+                  <div className={styles.campo}>
+                    <label className={styles.campoLabel}>Precio</label>
+                    <div className={styles.precioWrap}>
+                      <span className={styles.precioPrefijo}>$</span>
+                      <input
+                        className={styles.precioInput}
+                        type="number"
+                        inputMode="numeric"
+                        value={srv.precio ?? 0}
+                        onChange={e => handlePrecioChange(sIdx, e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Items */}
+                  <div className={styles.campo}>
+                    <label className={styles.campoLabel}>Qué incluye</label>
+                    <div className={styles.itemsList}>
+                      {(srv.items || []).map((item, iIdx) => (
+                        <div key={iIdx} className={styles.itemRow}>
+                          <label className={styles.itemCheck}>
+                            <input
+                              type="checkbox"
+                              checked={item.activo}
+                              onChange={() => handleItemToggle(sIdx, iIdx)}
+                            />
+                            <span className={`${styles.itemLabel} ${!item.activo ? styles.itemDesactivo : ''}`}>
+                              {item.label}
+                            </span>
+                          </label>
+                          <button
+                            className={styles.btnEliminar}
+                            onClick={() => handleEliminarItem(sIdx, iIdx)}
+                            title="Eliminar ítem"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                      <button
+                        className={styles.btnAgregar}
+                        onClick={() => handleAgregarItem(sIdx)}
+                      >
+                        + Agregar ítem
+                      </button>
+                    </div>
+                  </div>
+
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* Guardar bottom */}
+        <div className={styles.footerGuardar}>
+          <button
+            className={styles.btnGuardarFull}
+            onClick={handleGuardar}
+            disabled={guardando}
+          >
+            {guardando ? 'Guardando…' : 'Guardar cambios'}
+          </button>
+        </div>
+
+      </div>
+    </div>
+  )
+}
+'use client'
+
+import { useState, useEffect, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
+import styles from './kanban.module.css'
+import KanbanCard from './KanbanCard'
+
+const TALLER_ID = 'cmo1pymo80000v58afkeey7so'
+
+const COLUMNAS = [
+  { id: 'ingresada',   label: 'Ingresada',   color: 'bl' },
+  { id: 'diagnostico', label: 'Diagnóstico', color: 'ye' },
+  { id: 'reparacion',  label: 'Reparación',  color: 'or' },
+  { id: 'lista',       label: 'Lista',       color: 'gr' },
+]
+
+function IconoEngranaje() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="3" />
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+    </svg>
+  )
+}
+
+function SkeletonCard() {
+  return <div className={styles.skeletonCard} />
+}
+
+function SkeletonColumna({ count = 2 }) {
+  return (
+    <div className={styles.columna}>
+      <div className={styles.colHeader}>
+        <div className={styles.skeletonLabel} />
+        <div className={styles.skeletonCount} />
+      </div>
+      <div className={styles.colCards}>
+        {Array.from({ length: count }).map((_, i) => (
+          <SkeletonCard key={i} />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+export default function KanbanPage() {
+  const router = useRouter()
+  const [bicis,    setBicis]    = useState([])
+  const [cargando, setCargando] = useState(true)
+  const [avanzando, setAvanzando] = useState(null)
+  const [saliendo,  setSaliendo]  = useState(new Set())
+
+  const cargarBicis = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/bicis?tallerId=${TALLER_ID}`)
+      if (!res.ok) throw new Error('Error al cargar bicis')
+      const data = await res.json()
+      setBicis(data)
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setCargando(false)
+    }
+  }, [])
+
+  useEffect(() => { cargarBicis() }, [cargarBicis])
+
+  const handleAvanzar = async (biciId, estadoActual) => {
+    const orden = ['ingresada', 'diagnostico', 'reparacion', 'lista', 'entregada']
+    const idx   = orden.indexOf(estadoActual)
+    if (idx < 0 || idx >= orden.length - 1) return
+
+    // Háptico
+    if (typeof navigator !== 'undefined' && navigator.vibrate) {
+      navigator.vibrate(30)
+    }
+
+    const nuevoEstado = orden[idx + 1]
+
+    // Trigger animación exit
+    setSaliendo(prev => new Set(prev).add(biciId))
+    setAvanzando(biciId)
+
+    // Esperar que termine la animación antes del PATCH
+    await new Promise(r => setTimeout(r, 280))
+
+    try {
+      const res = await fetch(`/api/bicis/${biciId}`, {
+        method:  'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ estado: nuevoEstado }),
+      })
+      if (!res.ok) throw new Error('Error al avanzar estado')
+      await cargarBicis()
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setAvanzando(null)
+      setSaliendo(prev => {
+        const next = new Set(prev)
+        next.delete(biciId)
+        return next
+      })
+    }
+  }
+
+  const bicisActivas = bicis.filter(b => b.estado !== 'entregada')
+
+  return (
+    <div className={styles.page}>
+
+      {/* Header */}
+      <div className={styles.header}>
+        <div className={styles.headerLeft}>
+          <span className={styles.logo}>918</span>
+          {!cargando && (
+            <span className={styles.headerMeta}>{bicisActivas.length} en taller</span>
+          )}
+        </div>
+        <div className={styles.headerRight}>
+          <button
+            className={styles.btnConfig}
+            onClick={() => router.push('/configuracion')}
+            title="Configuración del taller"
+            aria-label="Configuración"
+          >
+            <IconoEngranaje />
+          </button>
+          <button
+            className={styles.btnNuevo}
+            onClick={() => router.push('/registro')}
+          >
+            + Nueva bici
+          </button>
+        </div>
+      </div>
+
+      {/* Skeleton loading */}
+      {cargando && (
+        <div className={styles.kanban}>
+          <SkeletonColumna count={2} />
+          <SkeletonColumna count={2} />
+          <SkeletonColumna count={1} />
+          <SkeletonColumna count={1} />
+        </div>
+      )}
+
+      {/* Empty state */}
+      {!cargando && bicisActivas.length === 0 && (
+        <div className={styles.emptyState}>
+          <div className={styles.emptyIcon}>🚲</div>
+          <div className={styles.emptyTitle}>Sin bicis en el taller</div>
+          <div className={styles.emptyDesc}>Registrá la primera para arrancar.</div>
+          <button
+            className={styles.btnNuevoEmpty}
+            onClick={() => router.push('/registro')}
+          >
+            + Registrar bici
+          </button>
+        </div>
+      )}
+
+      {/* Kanban */}
+      {!cargando && bicisActivas.length > 0 && (
+        <div className={styles.kanban}>
+          {COLUMNAS.map(col => {
+            const tarjetas = bicisActivas.filter(b => b.estado === col.id)
+            return (
+              <div key={col.id} className={styles.columna}>
+                <div className={styles.colHeader} data-color={col.color}>
+                  <span className={styles.colLabel}>{col.label}</span>
+                  <span className={styles.colCount}>{tarjetas.length}</span>
+                </div>
+                <div className={styles.colCards}>
+                  {tarjetas.length === 0 && (
+                    <div className={styles.colEmpty}>—</div>
+                  )}
+                  {tarjetas.map(bici => (
+                    <div
+                      key={bici.id}
+                      className={[
+                        styles.cardWrapper,
+                        saliendo.has(bici.id) ? styles.cardSaliendo : '',
+                      ].join(' ')}
+                    >
+                      <KanbanCard
+                        bici={bici}
+                        avanzando={avanzando === bici.id}
+                        onAvanzar={() => handleAvanzar(bici.id, bici.estado)}
+                        onVerDetalle={() => router.push(`/bici/${bici.id}`)}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+    </div>
+  )
+}
+'use client'
+
+import styles from './KanbanCard.module.css'
+
+const ESTADO_SIGUIENTE_LABEL = {
+  ingresada:   'Diagnóstico →',
+  diagnostico: 'Reparación →',
+  reparacion:  'Lista →',
+  lista:       'Entregada →',
+}
+
+export default function KanbanCard({ bici, avanzando, onAvanzar, onVerDetalle }) {
+  const puedeAvanzar       = bici.estado !== 'lista' && bici.estado !== 'entregada'
+  const tiempoTranscurrido = getTiempo(bici.creadoEn)
+  const fotoPortada        = bici.fotos?.[0]?.url || null
+
+  return (
+    <div className={styles.card} onClick={() => onVerDetalle(bici)}>
+
+      {fotoPortada && (
+        <img src={fotoPortada} alt="" className={styles.fotoPortada} />
+      )}
+
+      <div className={styles.header}>
+        <div className={styles.modelo}>{bici.modelo}</div>
+        <div className={styles.tiempo}>{tiempoTranscurrido}</div>
+      </div>
+
+      <div className={styles.meta}>
+        {bici.cliente?.nombre && (
+          <span className={styles.clienteNombre}>{bici.cliente.nombre}</span>
+        )}
+        {bici.color && (
+          <span className={styles.color}>{bici.color}</span>
+        )}
+      </div>
+
+      {puedeAvanzar && (
+        <div className={styles.footer}>
+          <button
+            className={`${styles.btnAvanzar} ${avanzando ? styles.btnAvanzandoActivo : ''}`}
+            onClick={(e) => { e.stopPropagation(); if (!avanzando) onAvanzar(bici.id) }}
+            disabled={avanzando}
+          >
+            {avanzando
+              ? <span className={styles.btnSpinner} />
+              : ESTADO_SIGUIENTE_LABEL[bici.estado]
+            }
+          </button>
+        </div>
+      )}
+
+    </div>
+  )
+}
+
+function getTiempo(fechaStr) {
+  if (!fechaStr) return ''
+  const diff = Date.now() - new Date(fechaStr).getTime()
+  const mins = Math.floor(diff / 60000)
+  const hrs  = Math.floor(mins / 60)
+  const dias = Math.floor(hrs / 24)
+  if (dias > 0) return `${dias}d`
+  if (hrs  > 0) return `${hrs}h`
+  if (mins > 0) return `${mins}m`
+  return 'ahora'
+}
+'use client'
+
+import { useState } from 'react'
+import styles      from './DetalleBici.module.css'
+import HallazgoForm from './HallazgoForm'
+
+const ESTADOS = ['ingresada', 'diagnostico', 'reparacion', 'lista', 'entregada']
+
+const ESTADOS_LABEL = {
+  ingresada:   'Ingresada',
+  diagnostico: 'Diagnóstico',
+  reparacion:  'Reparación',
+  lista:       'Lista',
+  entregada:   'Entregada',
+}
+
+const ESTADO_SIGUIENTE_LABEL = {
+  ingresada:   'Pasar a Diagnóstico',
+  diagnostico: 'Pasar a Reparación',
+  reparacion:  'Marcar como Lista',
+  lista:       'Marcar como Entregada',
+}
+
+export default function DetalleBici({ bici, onClose, onAvanzar }) {
+  const [avanzando,       setAvanzando]       = useState(false)
+  const [fotoActiva,      setFotoActiva]       = useState(null)
+  const [mostrarForm,     setMostrarForm]      = useState(false)
+  const [hallazgos,       setHallazgos]        = useState(bici.hallazgos || [])
+  const [resolviendoId,   setResolviendoId]    = useState(null)
+
+  const indexEstado  = ESTADOS.indexOf(bici.estado)
+  const hayPendiente = hallazgos.some(h => h.estado === 'pendiente')
+  const puedeAvanzar = bici.estado !== 'entregada' && !hayPendiente
+
+  const handleAvanzar = async () => {
+    setAvanzando(true)
+    await onAvanzar(bici.id)
+    setAvanzando(false)
+    onClose()
+  }
+
+  const handleHallazgoCreado = (hallazgo) => {
+    setHallazgos(prev => [...prev, hallazgo])
+  }
+
+  const handleResolver = async (hallazgoId, estado) => {
+    setResolviendoId(hallazgoId)
+    try {
+      const res = await fetch(`/api/hallazgos/${hallazgoId}`, {
+        method:  'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ estado }),
+      })
+      if (!res.ok) throw new Error()
+      const actualizado = await res.json()
+      setHallazgos(prev => prev.map(h => h.id === hallazgoId ? actualizado : h))
+    } catch (err) {
+      console.error('Error resolviendo hallazgo:', err)
+    } finally {
+      setResolviendoId(null)
+    }
+  }
+
+  const formatFecha = (fecha) => {
+    if (!fecha) return '—'
+    return new Date(fecha).toLocaleDateString('es-AR', {
+      day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit',
+    })
+  }
+
+  return (
+    <>
+      <div className={styles.overlay} onClick={onClose} />
+
+      <div className={styles.sheet}>
+        <div className={styles.handle} onClick={onClose} />
+
+        {/* Header */}
+        <div className={styles.sheetHeader}>
+          <div>
+            <div className={styles.clienteNombre}>{bici.cliente?.nombre || 'Sin cliente'}</div>
+            {bici.cliente?.whatsapp && (
+              <a
+                href={`https://wa.me/${bici.cliente.whatsapp.replace(/\D/g,'')}`}
+                className={styles.whatsapp}
+                target="_blank" rel="noreferrer"
+                onClick={e => e.stopPropagation()}
+              >
+                {bici.cliente.whatsapp}
+              </a>
+            )}
+          </div>
+          <button className={styles.btnCerrar} onClick={onClose}>✕</button>
+        </div>
+
+        {/* Bici info */}
+        <div className={styles.biciRow}>
+          <div className={styles.biciModelo}>{bici.modelo}</div>
+          {bici.color && <span className={styles.biciColor}>{bici.color}</span>}
+        </div>
+
+        {/* Timeline */}
+        <div className={styles.timeline}>
+          {ESTADOS.filter(e => e !== 'entregada').map((estado, i) => (
+            <div
+              key={estado}
+              className={[
+                styles.timelineItem,
+                i <= indexEstado       ? styles.timelineActivo  : '',
+                estado === bici.estado ? styles.timelineCurrent : '',
+              ].join(' ')}
+            >
+              <div className={styles.timelineDot} />
+              <span className={styles.timelineLabel}>{ESTADOS_LABEL[estado]}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* Tipo de servicio */}
+        {bici.tipoServicio && (
+          <div className={styles.seccion}>
+            <div className={styles.seccionLabel}>Servicio</div>
+            <div className={styles.descripcion}>{bici.tipoServicio}</div>
+          </div>
+        )}
+
+        {/* Notas */}
+        {bici.notas && (
+          <div className={styles.seccion}>
+            <div className={styles.seccionLabel}>Notas</div>
+            <div className={styles.descripcion}>{bici.notas}</div>
+          </div>
+        )}
+
+        {/* Hallazgos */}
+        <div className={styles.seccion}>
+          <div className={styles.hallazgosHeader}>
+            <div className={styles.seccionLabel}>
+              Hallazgos {hallazgos.length > 0 && `(${hallazgos.length})`}
+            </div>
+            {bici.estado !== 'entregada' && (
+              <button className={styles.btnReportar} onClick={() => setMostrarForm(true)}>
+                + Reportar
+              </button>
+            )}
+          </div>
+
+          {hallazgos.length === 0 ? (
+            <div className={styles.hallazgosVacio}>Sin hallazgos registrados</div>
+          ) : (
+            <div className={styles.hallazgosList}>
+              {hallazgos.map(h => (
+                <div key={h.id} className={`${styles.hallazgoItem} ${styles['hallazgo_' + h.estado]}`}>
+                  <div className={styles.hallazgoTop}>
+                    {h.fotoUrl && (
+                      <img
+                        src={h.fotoUrl}
+                        alt=""
+                        className={styles.hallazgoFoto}
+                        onClick={() => setFotoActiva(h.fotoUrl)}
+                      />
+                    )}
+                    <div className={styles.hallazgoInfo}>
+                      <div className={styles.hallazgoDesc}>{h.descripcion}</div>
+                      <div className={styles.hallazgoPrecio}>
+                        ${Number(h.precio).toLocaleString('es-AR')}
+                      </div>
+                    </div>
+                    <div className={`${styles.hallazgoBadge} ${styles['badge_' + h.estado]}`}>
+                      {h.estado === 'pendiente'  && 'Esperando'}
+                      {h.estado === 'aprobado'   && 'Aprobado'}
+                      {h.estado === 'rechazado'  && 'Rechazado'}
+                    </div>
+                  </div>
+
+                  {/* Simulación de respuesta del cliente — solo en pendiente */}
+                  {h.estado === 'pendiente' && (
+                    <div className={styles.hallazgoSimular}>
+                      <span className={styles.simularLabel}>Simular respuesta del cliente:</span>
+                      <div className={styles.simularBtns}>
+                        <button
+                          className={styles.btnAprobar}
+                          disabled={resolviendoId === h.id}
+                          onClick={() => handleResolver(h.id, 'aprobado')}
+                        >
+                          ✓ Aprobó
+                        </button>
+                        <button
+                          className={styles.btnRechazar}
+                          disabled={resolviendoId === h.id}
+                          onClick={() => handleResolver(h.id, 'rechazado')}
+                        >
+                          ✕ Rechazó
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Fotos de recepción */}
+        {bici.fotos && bici.fotos.length > 0 && (
+          <div className={styles.seccion}>
+            <div className={styles.seccionLabel}>Fotos de recepción ({bici.fotos.length})</div>
+            <div className={styles.fotosGrid}>
+              {bici.fotos.map((foto, i) => (
+                <img
+                  key={i}
+                  src={foto.url}
+                  alt={foto.angulo || ''}
+                  className={styles.foto}
+                  onClick={() => setFotoActiva(foto.url)}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className={styles.fecha}>Ingresó el {formatFecha(bici.creadoEn)}</div>
+
+        {/* Footer */}
+        {bici.estado !== 'entregada' ? (
+          <div className={styles.footer}>
+            {hayPendiente ? (
+              <button className={styles.btnAvanzar} disabled>
+                {ESTADO_SIGUIENTE_LABEL[bici.estado]} · presupuesto pendiente
+              </button>
+            ) : (
+              <button
+                className={styles.btnAvanzar}
+                onClick={handleAvanzar}
+                disabled={avanzando}
+              >
+                {avanzando ? 'Avanzando...' : ESTADO_SIGUIENTE_LABEL[bici.estado]}
+              </button>
+            )}
+          </div>
+        ) : (
+          <div className={styles.footer}>
+            <div className={styles.entregadaMsg}>✓ Bici entregada</div>
+          </div>
+        )}
+      </div>
+
+      {/* Lightbox */}
+      {fotoActiva && (
+        <div className={styles.lightbox} onClick={() => setFotoActiva(null)}>
+          <img src={fotoActiva} alt="" className={styles.lightboxImg} />
+        </div>
+      )}
+
+      {/* HallazgoForm */}
+      {mostrarForm && (
+        <HallazgoForm
+          bici={bici}
+          onClose={() => setMostrarForm(false)}
+          onHallazgoCreado={handleHallazgoCreado}
+        />
+      )}
+    </>
+  )
+}
+'use client'
+
+import { useState, useRef } from 'react'
+import styles from './HallazgoForm.module.css'
+
+export default function HallazgoForm({ bici, onClose, onHallazgoCreado }) {
+  const [descripcion, setDescripcion] = useState('')
+  const [precio,      setPrecio]      = useState('')
+  const [fotoUrl,     setFotoUrl]     = useState(null)
+  const [guardando,   setGuardando]   = useState(false)
+  const [error,       setError]       = useState(null)
+  const fileRef = useRef(null)
+
+  const handleFoto = (e) => {
+    const archivo = e.target.files[0]
+    if (!archivo) return
+    const reader = new FileReader()
+    reader.onload = (ev) => setFotoUrl(ev.target.result)
+    reader.readAsDataURL(archivo)
+  }
+
+  const handleEnviar = async () => {
+    if (!descripcion.trim()) { setError('Describí el hallazgo'); return }
+    if (!precio || isNaN(Number(precio)) || Number(precio) <= 0) {
+      setError('Ingresá un precio válido'); return
+    }
+    setError(null)
+    setGuardando(true)
+    try {
+      const res = await fetch('/api/hallazgos', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          biciId:      bici.id,
+          descripcion: descripcion.trim(),
+          precio:      Number(precio),
+          fotoUrl:     fotoUrl || null,
+        }),
+      })
+      if (!res.ok) throw new Error('Error al guardar')
+      const hallazgo = await res.json()
+      onHallazgoCreado(hallazgo)
+      onClose()
+    } catch (err) {
+      console.error(err)
+      setError('No se pudo enviar. Intentá de nuevo.')
+    } finally {
+      setGuardando(false)
+    }
+  }
+
+  const precioNum = Number(precio)
+  const nombreCliente = bici.cliente?.nombre || 'el cliente'
+
+  return (
+    <>
+      <div className={styles.overlay} onClick={onClose} />
+      <div className={styles.sheet}>
+        <div className={styles.handle} onClick={onClose} />
+
+        <div className={styles.header}>
+          <div className={styles.titulo}>Reportar hallazgo</div>
+          <div className={styles.subtitulo}>{bici.modelo}</div>
+        </div>
+
+        <div className={styles.cuerpo}>
+          {error && <div className={styles.error}>{error}</div>}
+
+          {/* Foto */}
+          <div className={styles.campo}>
+            <label className={styles.label}>Foto del problema</label>
+            {fotoUrl ? (
+              <div className={styles.fotoPreview}>
+                <img src={fotoUrl} alt="hallazgo" className={styles.fotoImg} />
+                <button className={styles.btnQuitarFoto} onClick={() => setFotoUrl(null)}>
+                  ✕ Sacar otra
+                </button>
+              </div>
+            ) : (
+              <button className={styles.btnFoto} onClick={() => fileRef.current?.click()}>
+                <span className={styles.btnFotoIcon}>📷</span>
+                <span>Sacar foto</span>
+              </button>
+            )}
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              onChange={handleFoto}
+              style={{ display: 'none' }}
+            />
+          </div>
+
+          {/* Descripción */}
+          <div className={styles.campo}>
+            <label className={styles.label}>Descripción *</label>
+            <textarea
+              className={styles.textarea}
+              placeholder="Ej: Pastillas de freno delantero gastadas, necesitan reemplazo"
+              value={descripcion}
+              onChange={e => setDescripcion(e.target.value)}
+              rows={3}
+              autoFocus
+            />
+          </div>
+
+          {/* Precio */}
+          <div className={styles.campo}>
+            <label className={styles.label}>Precio del trabajo *</label>
+            <div className={styles.precioWrap}>
+              <span className={styles.precioPrefijo}>$</span>
+              <input
+                className={styles.precioInput}
+                type="number"
+                inputMode="numeric"
+                placeholder="0"
+                value={precio}
+                onChange={e => setPrecio(e.target.value)}
+                min="0"
+              />
+            </div>
+          </div>
+
+          {/* Preview WA */}
+          {descripcion.trim() && precioNum > 0 && (
+            <div className={styles.waPreview}>
+              <div className={styles.waLabel}>SE ENVÍA AL CLIENTE AHORA</div>
+              <div className={styles.waMensaje}>
+                Hola {nombreCliente} 👋{'\n\n'}
+                Revisando tu bici encontramos un problema:{'\n'}
+                <strong>{descripcion.trim()}</strong>{'\n\n'}
+                El costo adicional sería de{' '}
+                <span className={styles.waPrecio}>${precioNum.toLocaleString('es-AR')}</span>.{'\n\n'}
+                ¿Lo aprobás? Respondé <strong>SÍ</strong> para que sigamos o <strong>NO</strong> si preferís que lo dejemos.
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className={styles.footer}>
+          <button className={styles.btnCancelar} onClick={onClose}>Cancelar</button>
+          <button
+            className={styles.btnEnviar}
+            onClick={handleEnviar}
+            disabled={guardando}
+          >
+            {guardando ? 'Enviando...' : 'Enviar al cliente →'}
+          </button>
+        </div>
+      </div>
+    </>
+  )
+}
+'use client'
+
+import { useState, useRef } from 'react'
+import styles from './RegistroModal.module.css'
+
+const PASOS = ['Cliente', 'Bici', 'Fotos', 'Confirmar']
+
+const INICIAL_CLIENTE = { nombre: '', whatsapp: '' }
+const INICIAL_BICI    = { modelo: '', color: '', tipoServicio: '', notas: '' }
+
+export default function RegistroModal({ onClose, onExito }) {
+  const [paso,     setPaso]     = useState(0)
+  const [cliente,  setCliente]  = useState(INICIAL_CLIENTE)
+  const [bici,     setBici]     = useState(INICIAL_BICI)
+  // fotos: [{ url: base64, angulo: string }]
+  const [fotos,    setFotos]    = useState([])
+  const [guardando, setGuardando] = useState(false)
+  const [error,    setError]    = useState(null)
+  const fileRef = useRef(null)
+
+  const irA = (n) => { setError(null); setPaso(n) }
+
+  const avanzar = () => {
+    if (paso === 0 && !cliente.nombre.trim()) {
+      setError('El nombre del cliente es requerido'); return
+    }
+    if (paso === 1 && !bici.modelo.trim()) {
+      setError('El modelo de la bici es requerido'); return
+    }
+    setError(null)
+    setPaso(p => p + 1)
+  }
+
+  const retroceder = () => setPaso(p => p - 1)
+
+  // Fotos — guardamos base64 como url por ahora
+  // (en producción habría que subir a un storage y guardar la URL real)
+  const handleFotos = (e) => {
+    const archivos = Array.from(e.target.files)
+    archivos.forEach(archivo => {
+      const reader = new FileReader()
+      reader.onload = (ev) => {
+        setFotos(prev => [...prev, { url: ev.target.result, angulo: 'general' }])
+      }
+      reader.readAsDataURL(archivo)
+    })
+  }
+
+  const quitarFoto = (i) => setFotos(prev => prev.filter((_, idx) => idx !== i))
+
+  const handleGuardar = async () => {
+    setGuardando(true)
+    setError(null)
+    try {
+      const res = await fetch('/api/bicis', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          cliente: {
+            nombre:   cliente.nombre.trim(),
+            whatsapp: cliente.whatsapp.trim() || '',
+          },
+          bici: {
+            modelo:       bici.modelo.trim(),
+            color:        bici.color.trim()        || null,
+            tipoServicio: bici.tipoServicio.trim() || null,
+            notas:        bici.notas.trim()        || null,
+            problemas:    [],
+          },
+          fotos,
+        })
+      })
+      if (!res.ok) throw new Error('Error al guardar')
+      const nuevaBici = await res.json()
+      onExito(nuevaBici)
+    } catch (err) {
+      console.error(err)
+      setError('No se pudo registrar la bici. Intentá de nuevo.')
+    } finally {
+      setGuardando(false)
+    }
+  }
+
+  return (
+    <div className={styles.overlay} onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <div className={styles.modal}>
+
+        {/* Header */}
+        <div className={styles.modalHeader}>
+          <button className={styles.btnCerrar} onClick={onClose}>✕</button>
+          <div className={styles.modalTitulo}>Nueva bici</div>
+          <div className={styles.pasoIndicador}>{paso + 1} / {PASOS.length}</div>
+        </div>
+
+        {/* Stepper */}
+        <div className={styles.stepper}>
+          {PASOS.map((label, i) => (
+            <div
+              key={i}
+              className={`${styles.stepItem} ${i === paso ? styles.stepActivo : ''} ${i < paso ? styles.stepHecho : ''}`}
+              onClick={() => i < paso && irA(i)}
+            >
+              <div className={styles.stepDot} />
+              <span className={styles.stepLabel}>{label}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* Contenido */}
+        <div className={styles.contenido}>
+          {error && <div className={styles.error}>{error}</div>}
+
+          {/* Paso 0: Cliente */}
+          {paso === 0 && (
+            <div className={styles.paso}>
+              <div className={styles.campo}>
+                <label className={styles.label}>Nombre *</label>
+                <input
+                  className={styles.input}
+                  type="text"
+                  placeholder="Juan García"
+                  value={cliente.nombre}
+                  onChange={e => setCliente(p => ({ ...p, nombre: e.target.value }))}
+                  autoFocus
+                />
+              </div>
+              <div className={styles.campo}>
+                <label className={styles.label}>WhatsApp</label>
+                <input
+                  className={styles.input}
+                  type="tel"
+                  placeholder="11 1234-5678"
+                  value={cliente.whatsapp}
+                  onChange={e => setCliente(p => ({ ...p, whatsapp: e.target.value }))}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Paso 1: Bici */}
+          {paso === 1 && (
+            <div className={styles.paso}>
+              <div className={styles.campo}>
+                <label className={styles.label}>Modelo *</label>
+                <input
+                  className={styles.input}
+                  type="text"
+                  placeholder="Trek Marlin 5, Giant Talon..."
+                  value={bici.modelo}
+                  onChange={e => setBici(p => ({ ...p, modelo: e.target.value }))}
+                  autoFocus
+                />
+              </div>
+              <div className={styles.campo}>
+                <label className={styles.label}>Color</label>
+                <input
+                  className={styles.input}
+                  type="text"
+                  placeholder="Rojo, negro mate..."
+                  value={bici.color}
+                  onChange={e => setBici(p => ({ ...p, color: e.target.value }))}
+                />
+              </div>
+              <div className={styles.campo}>
+                <label className={styles.label}>Tipo de servicio</label>
+                <input
+                  className={styles.input}
+                  type="text"
+                  placeholder="Service completo, cambio pastillas..."
+                  value={bici.tipoServicio}
+                  onChange={e => setBici(p => ({ ...p, tipoServicio: e.target.value }))}
+                />
+              </div>
+              <div className={styles.campo}>
+                <label className={styles.label}>Notas</label>
+                <textarea
+                  className={`${styles.input} ${styles.textarea}`}
+                  placeholder="Observaciones al ingresar..."
+                  value={bici.notas}
+                  onChange={e => setBici(p => ({ ...p, notas: e.target.value }))}
+                  rows={3}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Paso 2: Fotos */}
+          {paso === 2 && (
+            <div className={styles.paso}>
+              <div className={styles.fotosHeader}>
+                <span className={styles.label}>Fotos de recepción</span>
+                <span className={styles.fotosOpcional}>opcional</span>
+              </div>
+              <div className={styles.fotosGrid}>
+                {fotos.map((foto, i) => (
+                  <div key={i} className={styles.fotoItem}>
+                    <img src={foto.url} alt={foto.angulo} className={styles.fotoImg} />
+                    <button className={styles.btnQuitarFoto} onClick={() => quitarFoto(i)}>✕</button>
+                  </div>
+                ))}
+                <button className={styles.btnAgregarFoto} onClick={() => fileRef.current?.click()}>
+                  <span className={styles.btnFotoIcon}>+</span>
+                  <span>Foto</span>
+                </button>
+              </div>
+              <input
+                ref={fileRef}
+                type="file"
+                accept="image/*"
+                multiple
+                capture="environment"
+                onChange={handleFotos}
+                style={{ display: 'none' }}
+              />
+              {fotos.length === 0 && (
+                <div className={styles.fotosTip}>
+                  Fotografiá el estado de la bici al recibirla
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Paso 3: Confirmación */}
+          {paso === 3 && (
+            <div className={styles.paso}>
+              <div className={styles.resumen}>
+                <div className={styles.resumenSeccion}>
+                  <div className={styles.resumenLabel}>Cliente</div>
+                  <div className={styles.resumenValor}>{cliente.nombre}</div>
+                  {cliente.whatsapp && (
+                    <div className={styles.resumenSub}>{cliente.whatsapp}</div>
+                  )}
+                </div>
+                <div className={styles.resumenSep} />
+                <div className={styles.resumenSeccion}>
+                  <div className={styles.resumenLabel}>Bici</div>
+                  <div className={styles.resumenValor}>{bici.modelo}</div>
+                  {bici.color && <div className={styles.resumenSub}>{bici.color}</div>}
+                  {bici.tipoServicio && <div className={styles.resumenDesc}>{bici.tipoServicio}</div>}
+                  {bici.notas && <div className={styles.resumenDesc}>{bici.notas}</div>}
+                </div>
+                {fotos.length > 0 && (
+                  <>
+                    <div className={styles.resumenSep} />
+                    <div className={styles.resumenSeccion}>
+                      <div className={styles.resumenLabel}>Fotos ({fotos.length})</div>
+                      <div className={styles.fotosResumen}>
+                        {fotos.slice(0, 3).map((f, i) => (
+                          <img key={i} src={f.url} alt="" className={styles.fotoMini} />
+                        ))}
+                        {fotos.length > 3 && (
+                          <div className={styles.fotosExtra}>+{fotos.length - 3}</div>
+                        )}
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className={styles.modalFooter}>
+          {paso > 0 && (
+            <button className={styles.btnVolver} onClick={retroceder}>← Volver</button>
+          )}
+          {paso < PASOS.length - 1 ? (
+            <button className={styles.btnSiguiente} onClick={avanzar}>Siguiente →</button>
+          ) : (
+            <button className={styles.btnGuardar} onClick={handleGuardar} disabled={guardando}>
+              {guardando ? 'Guardando...' : 'Registrar bici'}
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+import { NextResponse } from 'next/server'
+
+export async function POST() {
+  const response = NextResponse.json({ ok: true })
+  response.cookies.set('918_session', '', {
+    httpOnly: true,
+    maxAge:   0,
+    path:     '/',
+  })
+  return response
+}
+import { NextResponse } from 'next/server'
+import { prisma }        from '@/lib/prisma'
+
+const COOKIE_NAME = '918_session'
+const COOKIE_MAX_AGE = 60 * 60 * 24 * 365 // 1 año
+
+export async function POST(request) {
+  try {
+    const { whatsapp } = await request.json()
+
+    if (!whatsapp?.trim()) {
+      return NextResponse.json({ error: 'WhatsApp requerido' }, { status: 400 })
+    }
+
+    const taller = await prisma.taller.findUnique({
+      where: { whatsapp: whatsapp.trim() }
+    })
+
+    if (!taller) {
+      return NextResponse.json({ error: 'Taller no encontrado' }, { status: 404 })
+    }
+
+    const response = NextResponse.json({ ok: true, tallerId: taller.id })
+
+    response.cookies.set(COOKIE_NAME, taller.id, {
+      httpOnly: true,
+      secure:   process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge:   COOKIE_MAX_AGE,
+      path:     '/',
+    })
+
+    return response
+  } catch (error) {
+    console.error('POST /api/auth/login:', error)
+    return NextResponse.json({ error: 'Error interno' }, { status: 500 })
+  }
+}
+import { NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+
+const TALLER_ID = 'cmo1pymo80000v58afkeey7so'
+
+export async function GET() {
+  try {
+    const taller = await prisma.taller.findUnique({
+      where: { id: TALLER_ID },
+    })
+    if (!taller) {
+      return NextResponse.json({ error: 'Taller no encontrado' }, { status: 404 })
+    }
+    return NextResponse.json(taller)
+  } catch (error) {
+    console.error('GET /api/taller:', error)
+    return NextResponse.json({ error: 'Error interno' }, { status: 500 })
+  }
+}
+
+export async function POST(request) {
+  try {
+    const body = await request.json()
+    const { nombre, whatsapp, servicios } = body
+
+    if (!nombre || !whatsapp) {
+      return NextResponse.json({ error: 'Faltan campos requeridos' }, { status: 400 })
+    }
+
+    const existente = await prisma.taller.findUnique({
+      where: { whatsapp },
+    })
+
+    let taller
+    if (existente) {
+      taller = await prisma.taller.update({
+        where: { whatsapp },
+        data: { nombre, servicios: servicios || [] },
+      })
+    } else {
+      taller = await prisma.taller.create({
+        data: { nombre, whatsapp, servicios: servicios || [] },
+      })
+    }
+
+    return NextResponse.json(taller, { status: 201 })
+  } catch (error) {
+    console.error('POST /api/taller:', error)
+    return NextResponse.json({ error: 'Error interno' }, { status: 500 })
+  }
+}
+
+export async function PATCH(request) {
+  try {
+    const body = await request.json()
+    const { nombre, servicios } = body
+
+    const data = {}
+    if (nombre !== undefined) data.nombre = nombre.trim()
+    if (servicios !== undefined) data.servicios = servicios
+
+    if (Object.keys(data).length === 0) {
+      return NextResponse.json({ error: 'Nada que actualizar' }, { status: 400 })
+    }
+
+    const taller = await prisma.taller.update({
+      where: { id: TALLER_ID },
+      data,
+    })
+
+    return NextResponse.json(taller)
+  } catch (error) {
+    console.error('PATCH /api/taller:', error)
+    return NextResponse.json({ error: 'Error interno' }, { status: 500 })
+  }
+}
+import { NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+
+const TALLER_ID = process.env.TALLER_ID || 'taller-seed-id'
+
+export async function GET() {
+  try {
+    const bicis = await prisma.bici.findMany({
+      where: {
+        tallerId: TALLER_ID,
+        estado: { not: 'entregada' }
+      },
+      include: {
+        cliente:   true,
+        fotos:     true,
+        hallazgos: true,
+      },
+      orderBy: { creadoEn: 'desc' }
+    })
+    return NextResponse.json(bicis)
+  } catch (error) {
+    console.error('GET /api/bicis:', error)
+    return NextResponse.json({ error: 'Error interno' }, { status: 500 })
+  }
+}
+
+export async function POST(request) {
+  try {
+    const body = await request.json()
+    const { cliente, bici, fotos } = body
+
+    let clienteRecord = await prisma.cliente.findUnique({
+      where: {
+        whatsapp_tallerId: {
+          whatsapp: cliente.whatsapp || '',
+          tallerId: TALLER_ID
+        }
+      }
+    })
+
+    if (!clienteRecord) {
+      clienteRecord = await prisma.cliente.create({
+        data: {
+          nombre:   cliente.nombre,
+          whatsapp: cliente.whatsapp || '',
+          tallerId: TALLER_ID,
+        }
+      })
+    }
+
+    const nuevaBici = await prisma.bici.create({
+      data: {
+        modelo:       bici.modelo,
+        color:        bici.color       || null,
+        tipoServicio: bici.tipoServicio || null,
+        notas:        bici.notas       || null,
+        problemas:    bici.problemas   || [],
+        estado:       'ingresada',
+        clienteId:    clienteRecord.id,
+        tallerId:     TALLER_ID,
+        fotos: fotos && fotos.length > 0
+          ? { create: fotos.map(f => ({ url: f.url, angulo: f.angulo || 'general' })) }
+          : undefined
+      },
+      include: { cliente: true, fotos: true, hallazgos: true }
+    })
+
+    return NextResponse.json(nuevaBici, { status: 201 })
+  } catch (error) {
+    console.error('POST /api/bicis:', error)
+    return NextResponse.json({ error: 'Error interno' }, { status: 500 })
+  }
+}
+import { NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+
+const ESTADOS = ['ingresada', 'diagnostico', 'reparacion', 'lista', 'entregada']
+
+export async function PATCH(request, { params }) {
+  try {
+    const { id } = await params
+    const body = await request.json().catch(() => ({}))
+
+    // Si viene estado explícito, usarlo directo
+    if (body.estado) {
+      const bici = await prisma.bici.update({
+        where: { id },
+        data: { estado: body.estado },
+        include: { cliente: true, fotos: true }
+      })
+      return NextResponse.json(bici)
+    }
+
+    // Avanzar al siguiente estado
+    const biciActual = await prisma.bici.findUnique({
+      where: { id }
+    })
+
+    if (!biciActual) {
+      return NextResponse.json({ error: 'Bici no encontrada' }, { status: 404 })
+    }
+
+    const indexActual = ESTADOS.indexOf(biciActual.estado)
+    if (indexActual === -1 || indexActual === ESTADOS.length - 1) {
+      return NextResponse.json({ error: 'No se puede avanzar más' }, { status: 400 })
+    }
+
+    const nuevoEstado = ESTADOS[indexActual + 1]
+
+    const bici = await prisma.bici.update({
+      where: { id },
+      data: { estado: nuevoEstado },
+      include: { cliente: true, fotos: true }
+    })
+
+    return NextResponse.json(bici)
+  } catch (error) {
+    console.error('PATCH /api/bicis/[id]:', error)
+    return NextResponse.json({ error: 'Error interno' }, { status: 500 })
+  }
+}
+
+export async function GET(request, { params }) {
+  try {
+    const { id } = await params
+    const bici = await prisma.bici.findUnique({
+      where: { id },
+      include: { cliente: true, fotos: true, hallazgos: true }
+    })
+
+    if (!bici) {
+      return NextResponse.json({ error: 'Bici no encontrada' }, { status: 404 })
+    }
+
+    return NextResponse.json(bici)
+  } catch (error) {
+    console.error('GET /api/bicis/[id]:', error)
+    return NextResponse.json({ error: 'Error interno' }, { status: 500 })
+  }
+}
+import { NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+
+// POST /api/hallazgos — crear hallazgo
+export async function POST(request) {
+  try {
+    const body = await request.json()
+    const { biciId, descripcion, precio, fotoUrl } = body
+
+    if (!biciId || !descripcion || precio == null) {
+      return NextResponse.json({ error: 'Faltan campos requeridos' }, { status: 400 })
+    }
+
+    const hallazgo = await prisma.hallazgo.create({
+      data: {
+        biciId,
+        descripcion,
+        precio:  Number(precio),
+        fotoUrl: fotoUrl || null,
+        estado:  'pendiente',
+      },
+    })
+
+    // Registrar evento en historial
+    await prisma.eventoHistorial.create({
+      data: {
+        biciId,
+        tipo:        'hallazgo_enviado',
+        descripcion: `Hallazgo enviado: ${descripcion}`,
+      },
+    })
+
+    return NextResponse.json(hallazgo, { status: 201 })
+  } catch (error) {
+    console.error('POST /api/hallazgos:', error)
+    return NextResponse.json({ error: 'Error interno' }, { status: 500 })
+  }
+}
+import { NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+
+// PATCH /api/hallazgos/[id] — aprobar o rechazar
+export async function PATCH(request, { params }) {
+  try {
+    const { id } = await params
+    const body   = await request.json()
+    const { estado } = body
+
+    if (!['aprobado', 'rechazado'].includes(estado)) {
+      return NextResponse.json({ error: 'Estado inválido' }, { status: 400 })
+    }
+
+    const hallazgo = await prisma.hallazgo.update({
+      where: { id },
+      data: {
+        estado,
+        respondidoEn: new Date(),
+      },
+    })
+
+    // Registrar evento en historial
+    await prisma.eventoHistorial.create({
+      data: {
+        biciId:      hallazgo.biciId,
+        tipo:        estado === 'aprobado' ? 'hallazgo_aprobado' : 'hallazgo_rechazado',
+        descripcion: `Hallazgo ${estado}: ${hallazgo.descripcion}`,
+      },
+    })
+
+    return NextResponse.json(hallazgo)
+  } catch (error) {
+    console.error('PATCH /api/hallazgos/[id]:', error)
+    return NextResponse.json({ error: 'Error interno' }, { status: 500 })
+  }
+}
+'use client'
+
+import { useState }    from 'react'
+import { useRouter }   from 'next/navigation'
+import styles          from './login.module.css'
+
+export default function LoginPage() {
+  const router = useRouter()
+  const [whatsapp, setWhatsapp] = useState('')
+  const [loading,  setLoading]  = useState(false)
+  const [error,    setError]    = useState(null)
+
+  const handleLogin = async () => {
+    if (!whatsapp.trim()) { setError('Ingresá tu WhatsApp'); return }
+    setLoading(true)
+    setError(null)
+    try {
+      const res = await fetch('/api/auth/login', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ whatsapp: whatsapp.trim() }),
+      })
+      if (res.status === 404) { setError('Número no registrado. ¿Ya hiciste el onboarding?'); return }
+      if (!res.ok)            { setError('Error al ingresar. Intentá de nuevo.'); return }
+      router.push('/kanban')
+    } catch {
+      setError('Error de conexión.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleKey = (e) => { if (e.key === 'Enter') handleLogin() }
+
+  return (
+    <div className={styles.page}>
+      <div className={styles.cuerpo}>
+        <div className={styles.logo}>918</div>
+        <div className={styles.titulo}>Ingresá al taller</div>
+        <div className={styles.subtitulo}>Usá el WhatsApp con el que registraste tu taller.</div>
+
+        {error && <div className={styles.error}>{error}</div>}
+
+        <div className={styles.campo}>
+          <label className={styles.label}>WhatsApp del negocio</label>
+          <div className={styles.waWrap}>
+            <span className={styles.waPrefijo}>+54</span>
+            <input
+              className={styles.waInput}
+              type="tel"
+              inputMode="numeric"
+              placeholder="11 5823 4480"
+              value={whatsapp}
+              onChange={e => setWhatsapp(e.target.value)}
+              onKeyDown={handleKey}
+              autoFocus
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className={styles.footer}>
+        <button
+          className={styles.btnPrimario}
+          onClick={handleLogin}
+          disabled={loading}
+        >
+          {loading ? 'Ingresando...' : 'Ingresar →'}
+        </button>
+        <button
+          className={styles.btnLink}
+          onClick={() => router.push('/onboarding')}
+        >
+          ¿Taller nuevo? Configurá acá
+        </button>
+      </div>
+    </div>
+  )
+}
+'use client'
+
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import styles from './onboarding.module.css'
+
+const SERVICIOS_DEFAULT = [
+  {
+    id:     'basico',
+    nombre: 'Service básico',
+    precio: 8000,
+    items: [
+      { label: 'Limpieza general',    activo: true },
+      { label: 'Lubricación de cadena', activo: true },
+      { label: 'Ajuste de frenos',    activo: true },
+      { label: 'Inflado de cubiertas', activo: true },
+      { label: 'Ajuste de cambios',   activo: true },
+    ],
+  },
+  {
+    id:     'completo',
+    nombre: 'Service completo',
+    precio: 18000,
+    items: [
+      { label: 'Todo el service básico',        activo: true },
+      { label: 'Revisión de rodamientos',       activo: true },
+      { label: 'Centrado de ruedas',            activo: true },
+      { label: 'Revisión de dirección',         activo: true },
+      { label: 'Limpieza profunda de transmisión', activo: true },
+    ],
+  },
+  {
+    id:     'premium',
+    nombre: 'Service premium',
+    precio: 35000,
+    items: [
+      { label: 'Todo el service completo', activo: true },
+      { label: 'Desarmado completo',       activo: true },
+      { label: 'Cambio de cables y fundas', activo: true },
+      { label: 'Revisión y ajuste de horquilla', activo: true },
+      { label: 'Pulido de aros',           activo: true },
+    ],
+  },
+  {
+    id:     'diagnostico',
+    nombre: 'Solo diagnóstico',
+    precio: 3500,
+    items: [
+      { label: 'Inspección visual completa', activo: true },
+      { label: 'Informe de estado',          activo: true },
+      { label: 'Presupuesto detallado',      activo: true },
+    ],
+  },
+]
+
+export default function OnboardingPage() {
+  const router = useRouter()
+  const [paso,      setPaso]      = useState(0)
+  const [nombre,    setNombre]    = useState('')
+  const [whatsapp,  setWhatsapp]  = useState('')
+  const [codigo,    setCodigo]    = useState(['', '', '', ''])
+  const [servicios, setServicios] = useState(SERVICIOS_DEFAULT)
+  const [guardando, setGuardando] = useState(false)
+  const [error,     setError]     = useState(null)
+  const [tallerNombre, setTallerNombre] = useState('')
+
+  // Paso 4-7: índice del servicio actual (0-3)
+  const servicioIdx = paso - 3
+
+  const avanzar = () => { setError(null); setPaso(p => p + 1) }
+  const retroceder = () => { setError(null); setPaso(p => p - 1) }
+
+  const handleCodigoChange = (i, val) => {
+    if (!/^\d?$/.test(val)) return
+    const nuevo = [...codigo]
+    nuevo[i] = val
+    setCodigo(nuevo)
+    if (val && i < 3) {
+      document.getElementById(`cod-${i + 1}`)?.focus()
+    }
+  }
+
+  const handleContinuarDatos = () => {
+    if (!nombre.trim()) { setError('El nombre del taller es requerido'); return }
+    if (!whatsapp.trim()) { setError('El WhatsApp es requerido'); return }
+    setTallerNombre(nombre.trim())
+    avanzar()
+  }
+
+  const handleVerificar = () => {
+    // Simulación: cualquier código de 4 dígitos pasa
+    if (codigo.some(c => c === '')) { setError('Ingresá el código completo'); return }
+    avanzar()
+  }
+
+  const handlePrecioChange = (idx, val) => {
+    const nuevo = [...servicios]
+    nuevo[idx] = { ...nuevo[idx], precio: Number(val) || 0 }
+    setServicios(nuevo)
+  }
+
+  const handleItemToggle = (sIdx, iIdx) => {
+    const nuevo = [...servicios]
+    const items = [...nuevo[sIdx].items]
+    items[iIdx] = { ...items[iIdx], activo: !items[iIdx].activo }
+    nuevo[sIdx] = { ...nuevo[sIdx], items }
+    setServicios(nuevo)
+  }
+
+  const handleAgregarItem = (sIdx) => {
+    const label = prompt('Nombre del ítem:')
+    if (!label?.trim()) return
+    const nuevo = [...servicios]
+    nuevo[sIdx] = {
+      ...nuevo[sIdx],
+      items: [...nuevo[sIdx].items, { label: label.trim(), activo: true }]
+    }
+    setServicios(nuevo)
+  }
+
+  const handleGuardar = async () => {
+    setGuardando(true)
+    setError(null)
+    try {
+      const res = await fetch('/api/taller', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nombre:    nombre.trim(),
+          whatsapp:  whatsapp.trim(),
+          servicios: servicios.map(s => ({
+            id:     s.id,
+            nombre: s.nombre,
+            precio: s.precio,
+            items:  s.items,
+          })),
+        }),
+      })
+      if (!res.ok) throw new Error('Error al guardar')
+      avanzar()
+    } catch (err) {
+      console.error(err)
+      setError('No se pudo guardar. Intentá de nuevo.')
+    } finally {
+      setGuardando(false)
+    }
+  }
+
+  return (
+    <div className={styles.page}>
+
+      {/* ── P1: Bienvenida ── */}
+      {paso === 0 && (
+        <div className={styles.pantalla}>
+          <div className={styles.bienvenidaCuerpo}>
+            <div className={styles.logo918}>918</div>
+            <div className={styles.bienvenidaTitulo}>El taller en tu bolsillo</div>
+            <div className={styles.bienvenidaDesc}>
+              Registrá bicis, mandá presupuestos y notificá a tus clientes desde el celular.
+            </div>
+          </div>
+          <div className={styles.footer}>
+            <button className={styles.btnPrimario} onClick={avanzar}>Empezar</button>
+          </div>
+        </div>
+      )}
+
+      {/* ── P2: Datos del taller ── */}
+      {paso === 1 && (
+        <div className={styles.pantalla}>
+          <div className={styles.cuerpo}>
+            <div className={styles.stepTag}>1 DE 7</div>
+            <div className={styles.titulo}>Tu taller</div>
+            <div className={styles.subtitulo}>Cómo se llama y cómo te contactan los clientes.</div>
+            {error && <div className={styles.error}>{error}</div>}
+            <div className={styles.campo}>
+              <label className={styles.label}>Nombre del taller</label>
+              <input
+                className={styles.input}
+                type="text"
+                placeholder="Taller El Rodado"
+                value={nombre}
+                onChange={e => setNombre(e.target.value)}
+                autoFocus
+              />
+            </div>
+            <div className={styles.campo}>
+              <label className={styles.label}>WhatsApp del negocio</label>
+              <div className={styles.waWrap}>
+                <span className={styles.waPrefijo}>+54</span>
+                <input
+                  className={styles.waInput}
+                  type="tel"
+                  inputMode="numeric"
+                  placeholder="11 5823 4480"
+                  value={whatsapp}
+                  onChange={e => setWhatsapp(e.target.value)}
+                />
+              </div>
+              <div className={styles.hint}>Es el número que los clientes usan para contactarte.</div>
+            </div>
+          </div>
+          <div className={styles.footer}>
+            <button className={styles.btnPrimario} onClick={handleContinuarDatos}>Continuar →</button>
+          </div>
+        </div>
+      )}
+
+      {/* ── P3: Verificación WhatsApp ── */}
+      {paso === 2 && (
+        <div className={styles.pantalla}>
+          <div className={styles.cuerpo}>
+            <div className={styles.stepTag}>2 DE 7</div>
+            <div className={styles.titulo}>Verificá tu WhatsApp</div>
+            <div className={styles.subtitulo}>
+              Te mandamos un código al +54 {whatsapp}.
+            </div>
+            {error && <div className={styles.error}>{error}</div>}
+            <div className={styles.codigoWrap}>
+              {codigo.map((c, i) => (
+                <input
+                  key={i}
+                  id={`cod-${i}`}
+                  className={styles.codigoInput}
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={1}
+                  value={c}
+                  onChange={e => handleCodigoChange(i, e.target.value)}
+                />
+              ))}
+            </div>
+            <div className={styles.hint}>¿No llegó? Reenviá en 0:42</div>
+            <div className={styles.verificarNota}>
+              El agente va a responder en nombre de tu taller. Tenemos que confirmar que el número es tuyo.
+            </div>
+          </div>
+          <div className={styles.footer}>
+            <button className={styles.btnSecundario} onClick={retroceder}>← Volver</button>
+            <button className={styles.btnPrimario} onClick={handleVerificar}>Verificar</button>
+          </div>
+        </div>
+      )}
+
+      {/* ── P4-P7: Configuración de servicios ── */}
+      {paso >= 3 && paso <= 6 && (
+        <div className={styles.pantalla}>
+          <div className={styles.cuerpo}>
+            <div className={styles.stepTag}>SERVICIO {servicioIdx + 1} DE 4</div>
+            <div className={styles.titulo}>{servicios[servicioIdx].nombre}</div>
+            <div className={styles.subtitulo}>Destildá lo que no ofrecés, ajustá el precio.</div>
+
+            <div className={styles.campo}>
+              <label className={styles.label}>Precio</label>
+              <div className={styles.precioWrap}>
+                <span className={styles.precioPrefijo}>$</span>
+                <input
+                  className={styles.precioInput}
+                  type="number"
+                  inputMode="numeric"
+                  value={servicios[servicioIdx].precio}
+                  onChange={e => handlePrecioChange(servicioIdx, e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className={styles.campo}>
+              <label className={styles.label}>Qué incluye</label>
+              <div className={styles.itemsList}>
+                {servicios[servicioIdx].items.map((item, iIdx) => (
+                  <label key={iIdx} className={styles.itemRow}>
+                    <input
+                      type="checkbox"
+                      className={styles.itemCheck}
+                      checked={item.activo}
+                      onChange={() => handleItemToggle(servicioIdx, iIdx)}
+                    />
+                    <span className={`${styles.itemLabel} ${!item.activo ? styles.itemDesactivo : ''}`}>
+                      {item.label}
+                    </span>
+                  </label>
+                ))}
+                <button
+                  className={styles.btnAgregarItem}
+                  onClick={() => handleAgregarItem(servicioIdx)}
+                >
+                  + Agregar ítem propio
+                </button>
+              </div>
+            </div>
+          </div>
+          <div className={styles.footer}>
+            <button className={styles.btnSecundario} onClick={retroceder}>← Volver</button>
+            {paso < 6 ? (
+              <button className={styles.btnPrimario} onClick={avanzar}>Continuar →</button>
+            ) : (
+              <button className={styles.btnPrimario} onClick={handleGuardar} disabled={guardando}>
+                {guardando ? 'Guardando...' : 'Finalizar configuración'}
+              </button>
+            )}
+          </div>
+          {error && <div className={styles.errorFooter}>{error}</div>}
+        </div>
+      )}
+
+      {/* ── P8: Listo ── */}
+      {paso === 7 && (
+        <div className={styles.pantalla}>
+          <div className={styles.listoCuerpo}>
+            <div className={styles.listoCheck}>✓</div>
+            <div className={styles.listoTitulo}>{tallerNombre} está listo</div>
+            <div className={styles.listoDesc}>
+              El agente ya puede responder consultas por WhatsApp. Registrá tu primera bici para arrancar.
+            </div>
+            <div className={styles.listoStats}>
+              <div className={styles.listoStat}>
+                <div className={styles.listoStatNum}>4</div>
+                <div className={styles.listoStatLabel}>servicios</div>
+              </div>
+              <div className={styles.listoStatSep}>·</div>
+              <div className={styles.listoStat}>
+                <div className={styles.listoStatNum}>✓</div>
+                <div className={styles.listoStatLabel}>WA activo</div>
+              </div>
+            </div>
+          </div>
+          <div className={styles.footer}>
+            <button
+              className={styles.btnRegistrar}
+              onClick={() => router.push('/kanban')}
+            >
+              Registrar primera bici →
+            </button>
+          </div>
+        </div>
+      )}
+
+    </div>
+  )
+}
+export default function OfflinePage() {
+  return (
+    <main style={{
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      minHeight: '100dvh',
+      gap: '12px',
+      padding: '24px',
+      textAlign: 'center',
+    }}>
+      <span style={{ fontSize: '48px' }}>📡</span>
+      <h1 style={{ fontSize: '24px', fontWeight: 600, margin: 0 }}>Sin conexión</h1>
+      <p style={{ fontSize: '16px', color: 'var(--color-text-secondary)', margin: 0 }}>
+        918 necesita conexión para funcionar.<br />
+        Revisá tu red y volvé a intentar.
+      </p>
+    </main>
+  );
+}
+"use client";
+import styles from "./KanbanCard.module.css";
+
+const ESTADO_LABEL = {
+  ingresada:   "Ingresada",
+  diagnostico: "Diagnóstico",
+  reparacion:  "Reparación",
+  lista:       "Lista",
+  entregada:   "Entregada",
+};
+
+function tiempoRelativo(fecha) {
+  const diff = Date.now() - new Date(fecha).getTime();
+  const m = Math.floor(diff / 60000);
+  if (m < 60) return `hace ${m} min`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `hace ${h} h`;
+  return `hace ${Math.floor(h / 24)} d`;
+}
+
+export default function KanbanCard({ bici, onAvanzar, onReportar }) {
+  const foto = bici.fotos?.[0]?.url;
+  const hallazgoPendiente = bici.hallazgos?.[0];
+  const hasHallazgo = !!hallazgoPendiente;
+
+  return (
+    <div className={`${styles.card} ${hasHallazgo ? styles.hasHallazgo : ""}`}>
+      <div className={styles.inner}>
+        {foto ? (
+          <img src={foto} alt={bici.modelo} className={styles.foto} />
+        ) : (
+          <div className={styles.fotoPlaceholder}>🚲</div>
+        )}
+        <div className={styles.info}>
+          <div className={styles.modelo}>{bici.modelo}</div>
+          <div className={styles.cliente}>{bici.cliente?.nombre}</div>
+          <div className={styles.meta}>
+            <span className={`${styles.badge} ${styles[bici.estado]}`}>
+              {ESTADO_LABEL[bici.estado]}
+            </span>
+            <span className={styles.tiempo}>
+              {tiempoRelativo(bici.creadoEn)}
+            </span>
+          </div>
+        </div>
+      </div>
+      <div className={styles.footer}>
+        {hasHallazgo && (
+          <span className={styles.hallazgoStrip}>
+            Hallazgo · {hallazgoPendiente.descripcion}
+          </span>
+        )}
+        {hasHallazgo ? (
+          <button className={styles.btnReportar} onClick={() => onReportar?.(bici)}>
+            Reportar →
+          </button>
+        ) : (
+          <button className={styles.btnAvanzar} onClick={() => onAvanzar?.(bici)}>
+            Avanzar
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+import { NextResponse } from 'next/server'
+
+const COOKIE_NAME    = '918_session'
+const RUTAS_PRIVADAS = ['/kanban']
+const RUTAS_PUBLICAS = ['/login', '/onboarding']
+
+export function middleware(request) {
+  const { pathname } = request.nextUrl
+  const session = request.cookies.get(COOKIE_NAME)?.value
+
+  // Ruta privada sin sesión → login
+  const esPrivada = RUTAS_PRIVADAS.some(r => pathname.startsWith(r))
+  if (esPrivada && !session) {
+    return NextResponse.redirect(new URL('/login', request.url))
+  }
+
+  // Ya tiene sesión y va a login/onboarding → kanban
+  const esPublica = RUTAS_PUBLICAS.some(r => pathname.startsWith(r))
+  if (esPublica && session) {
+    return NextResponse.redirect(new URL('/kanban', request.url))
+  }
+
+  return NextResponse.next()
+}
+
+export const config = {
+  matcher: ['/kanban', '/kanban/:path*', '/login', '/onboarding', '/onboarding/:path*'],
+}
+import { PrismaClient } from "@prisma/client";
+
+const globalForPrisma = globalThis;
+
+const db = globalForPrisma.prisma ?? new PrismaClient();
+
+if (process.env.NODE_ENV !== "production") {
+  globalForPrisma.prisma = db;
+}
+
+export default db;
+const { PrismaClient } = require('@prisma/client')
+
+const globalForPrisma = global
+
+const prisma = globalForPrisma.prisma ?? new PrismaClient()
+
+if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
+
+module.exports = { prisma }
+import { defaultCache } from '@serwist/next/worker';
+import { installSerwist } from '@serwist/sw';
+
+installSerwist({
+  precacheEntries: self.__SW_MANIFEST,
+  skipWaiting: true,
+  clientsClaim: true,
+  navigationPreload: false,
+  runtimeCaching: defaultCache,
+  fallbacks: {
+    entries: [
+      {
+        url: '/offline',
+        matcher({ request }) {
+          return request.destination === 'document';
+        },
+      },
+    ],
+  },
+});

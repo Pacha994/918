@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import styles      from './DetalleBici.module.css'
+import styles       from './DetalleBici.module.css'
 import HallazgoForm from './HallazgoForm'
 
 const ESTADOS = ['ingresada', 'diagnostico', 'reparacion', 'lista', 'entregada']
@@ -21,16 +21,22 @@ const ESTADO_SIGUIENTE_LABEL = {
   lista:       'Marcar como Entregada',
 }
 
+const TIPO_SERVICIO_LABEL = {
+  basico:      'Service básico',
+  completo:    'Service completo',
+  premium:     'Service premium',
+  diagnostico: 'Solo diagnóstico',
+}
+
 export default function DetalleBici({ bici, onClose, onAvanzar }) {
-  const [avanzando,       setAvanzando]       = useState(false)
-  const [fotoActiva,      setFotoActiva]       = useState(null)
-  const [mostrarForm,     setMostrarForm]      = useState(false)
-  const [hallazgos,       setHallazgos]        = useState(bici.hallazgos || [])
-  const [resolviendoId,   setResolviendoId]    = useState(null)
+  const [avanzando,     setAvanzando]     = useState(false)
+  const [fotoActiva,    setFotoActiva]    = useState(null)
+  const [mostrarForm,   setMostrarForm]   = useState(false)
+  const [hallazgos,     setHallazgos]     = useState(bici.hallazgos || [])
+  const [resolviendoId, setResolviendoId] = useState(null)
 
   const indexEstado  = ESTADOS.indexOf(bici.estado)
   const hayPendiente = hallazgos.some(h => h.estado === 'pendiente')
-  const puedeAvanzar = bici.estado !== 'entregada' && !hayPendiente
 
   const handleAvanzar = async () => {
     setAvanzando(true)
@@ -120,7 +126,9 @@ export default function DetalleBici({ bici, onClose, onAvanzar }) {
         {bici.tipoServicio && (
           <div className={styles.seccion}>
             <div className={styles.seccionLabel}>Servicio</div>
-            <div className={styles.descripcion}>{bici.tipoServicio}</div>
+            <div className={styles.descripcion}>
+              {TIPO_SERVICIO_LABEL[bici.tipoServicio] ?? bici.tipoServicio}
+            </div>
           </div>
         )}
 
@@ -173,7 +181,6 @@ export default function DetalleBici({ bici, onClose, onAvanzar }) {
                     </div>
                   </div>
 
-                  {/* Simulación de respuesta del cliente — solo en pendiente */}
                   {h.estado === 'pendiente' && (
                     <div className={styles.hallazgoSimular}>
                       <span className={styles.simularLabel}>Simular respuesta del cliente:</span>

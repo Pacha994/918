@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-
-const TALLER_ID = 'cmo1pymo80000v58afkeey7so'
+import { TALLER_ID } from '@/lib/config'
 
 export async function GET() {
   try {

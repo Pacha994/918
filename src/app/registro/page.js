@@ -18,6 +18,22 @@ const WA_PREVIEW = {
   entregada: (modelo) => `Acá tenés el historial completo de todo lo que le hicimos a tu bici: [link]`,
 }
 
+function comprimirFoto(file, maxWidth = 1000, quality = 0.7) {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    img.onload = () => {
+      const scale = Math.min(1, maxWidth / img.width)
+      const canvas = document.createElement('canvas')
+      canvas.width = Math.round(img.width * scale)
+      canvas.height = Math.round(img.height * scale)
+      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height)
+      resolve(canvas.toDataURL('image/jpeg', quality))
+    }
+    img.onerror = reject
+    img.src = URL.createObjectURL(file)
+  })
+}
+
 export default function RegistroPage() {
   const router = useRouter()
   const [paso, setPaso] = useState(1)
@@ -30,7 +46,7 @@ export default function RegistroPage() {
   // ── Paso 2: Bici y fotos ──
   const [modelo, setModelo] = useState('')
   const [color,  setColor]  = useState('')
-  const [fotos, setFotos] = useState([]) // array de base64
+  const [fotos, setFotos] = useState([])
   const fotoRef = useRef(null)
 
   // ── Paso 3: Motivo ──
@@ -70,14 +86,11 @@ export default function RegistroPage() {
   // ────────────────────────────────────────
   // PASO 2
   // ────────────────────────────────────────
-  const handleFoto = (e) => {
+  const handleFoto = async (e) => {
     const file = e.target.files?.[0]
     if (!file) return
-    const reader = new FileReader()
-    reader.onload = ev => {
-      setFotos(prev => [...prev, ev.target.result])
-    }
-    reader.readAsDataURL(file)
+    const dataUrl = await comprimirFoto(file)
+    setFotos(prev => [...prev, dataUrl])
   }
 
   const fotosCount = fotos.length
@@ -348,11 +361,11 @@ export default function RegistroPage() {
 
             <div className={styles.seccionLabel} style={{ marginTop: 24 }}>WhatsApp automáticos</div>
             <div className={styles.waPreviewCard}>
-              <div className={styles.waPreviewLabel}>Al mover a "Lista"</div>
+              <div className={styles.waPreviewLabel}>Al mover a "Lista" · preview, no se envía aún</div>
               <div className={styles.waPreviewMsg}>{WA_PREVIEW.lista(modelo)}</div>
             </div>
             <div className={styles.waPreviewCard} style={{ marginTop: 8 }}>
-              <div className={styles.waPreviewLabel}>Al entregar</div>
+              <div className={styles.waPreviewLabel}>Al entregar · preview, no se envía aún</div>
               <div className={styles.waPreviewMsg}>{WA_PREVIEW.entregada(modelo)}</div>
             </div>
 
@@ -390,7 +403,7 @@ export default function RegistroPage() {
         )}
         {paso === 4 && (
           <>
-            <button className={styles.btnSecundario} onClick={() => { setError(null); setPaso(3) }}>
+            <button className={styles.btnSecundario} onClick={() => { setError(null); setPaso(1) }}>
               Editar
             </button>
             <button

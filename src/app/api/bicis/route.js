@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-
-const TALLER_ID = process.env.TALLER_ID || 'taller-seed-id'
+import { TALLER_ID } from '@/lib/config'
 
 export async function GET() {
   try {

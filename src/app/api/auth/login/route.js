@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma }        from '@/lib/prisma'
 
-const COOKIE_NAME = '918_session'
+const COOKIE_NAME    = '918_session'
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 365 // 1 año
 
 export async function POST(request) {
