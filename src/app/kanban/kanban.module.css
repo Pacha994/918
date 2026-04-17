@@ -50,6 +50,12 @@
   gap: 10px;
 }
 
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .logo {
   font-size: 18px;
   font-weight: 500;
@@ -60,6 +66,26 @@
 .headerMeta {
   font-size: 13px;
   color: var(--t4);
+}
+
+/* Botón engranaje */
+.btnConfig {
+  font-size: 18px;
+  line-height: 1;
+  background: none;
+  border: none;
+  color: var(--t4);
+  cursor: pointer;
+  padding: 5px 7px;
+  border-radius: var(--r-input);
+  transition: color 0.12s, background 0.12s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.btnConfig:hover {
+  color: var(--t2);
+  background: var(--bg2);
 }
 
 .btnNuevo {
@@ -136,7 +162,6 @@
   }
 }
 
-/* colHeader — sin sticky, overflow-x:auto en el padre lo rompe */
 .colHeader {
   display: flex;
   align-items: center;
