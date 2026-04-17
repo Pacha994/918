@@ -9,7 +9,7 @@ const ESTADO_SIGUIENTE_LABEL = {
   lista:       'Entregada →',
 }
 
-export default function KanbanCard({ bici, onAvanzar, onVerDetalle }) {
+export default function KanbanCard({ bici, avanzando, onAvanzar, onVerDetalle }) {
   const puedeAvanzar       = bici.estado !== 'lista' && bici.estado !== 'entregada'
   const tiempoTranscurrido = getTiempo(bici.creadoEn)
   const fotoPortada        = bici.fotos?.[0]?.url || null
@@ -21,13 +21,11 @@ export default function KanbanCard({ bici, onAvanzar, onVerDetalle }) {
         <img src={fotoPortada} alt="" className={styles.fotoPortada} />
       )}
 
-      {/* Modelo como título principal */}
       <div className={styles.header}>
         <div className={styles.modelo}>{bici.modelo}</div>
         <div className={styles.tiempo}>{tiempoTranscurrido}</div>
       </div>
 
-      {/* Cliente + color secundarios */}
       <div className={styles.meta}>
         {bici.cliente?.nombre && (
           <span className={styles.clienteNombre}>{bici.cliente.nombre}</span>
@@ -37,14 +35,17 @@ export default function KanbanCard({ bici, onAvanzar, onVerDetalle }) {
         )}
       </div>
 
-      {/* Footer solo con botón avanzar */}
       {puedeAvanzar && (
         <div className={styles.footer}>
           <button
-            className={styles.btnAvanzar}
-            onClick={(e) => { e.stopPropagation(); onAvanzar(bici.id) }}
+            className={`${styles.btnAvanzar} ${avanzando ? styles.btnAvanzandoActivo : ''}`}
+            onClick={(e) => { e.stopPropagation(); if (!avanzando) onAvanzar(bici.id) }}
+            disabled={avanzando}
           >
-            {ESTADO_SIGUIENTE_LABEL[bici.estado]}
+            {avanzando
+              ? <span className={styles.btnSpinner} />
+              : ESTADO_SIGUIENTE_LABEL[bici.estado]
+            }
           </button>
         </div>
       )}

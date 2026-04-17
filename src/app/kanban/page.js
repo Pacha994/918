@@ -14,11 +14,41 @@ const COLUMNAS = [
   { id: 'lista',       label: 'Lista',       color: 'gr' },
 ]
 
+function IconoEngranaje() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="3" />
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+    </svg>
+  )
+}
+
+function SkeletonCard() {
+  return <div className={styles.skeletonCard} />
+}
+
+function SkeletonColumna({ count = 2 }) {
+  return (
+    <div className={styles.columna}>
+      <div className={styles.colHeader}>
+        <div className={styles.skeletonLabel} />
+        <div className={styles.skeletonCount} />
+      </div>
+      <div className={styles.colCards}>
+        {Array.from({ length: count }).map((_, i) => (
+          <SkeletonCard key={i} />
+        ))}
+      </div>
+    </div>
+  )
+}
+
 export default function KanbanPage() {
   const router = useRouter()
-  const [bicis,     setBicis]     = useState([])
-  const [cargando,  setCargando]  = useState(true)
-  const [avanzando, setAvanzando] = useState(null) // id de bici en transición
+  const [bicis,    setBicis]    = useState([])
+  const [cargando, setCargando] = useState(true)
+  const [avanzando, setAvanzando] = useState(null)
+  const [saliendo,  setSaliendo]  = useState(new Set())
 
   const cargarBicis = useCallback(async () => {
     try {
@@ -40,8 +70,19 @@ export default function KanbanPage() {
     const idx   = orden.indexOf(estadoActual)
     if (idx < 0 || idx >= orden.length - 1) return
 
+    // Háptico
+    if (typeof navigator !== 'undefined' && navigator.vibrate) {
+      navigator.vibrate(30)
+    }
+
     const nuevoEstado = orden[idx + 1]
+
+    // Trigger animación exit
+    setSaliendo(prev => new Set(prev).add(biciId))
     setAvanzando(biciId)
+
+    // Esperar que termine la animación antes del PATCH
+    await new Promise(r => setTimeout(r, 280))
 
     try {
       const res = await fetch(`/api/bicis/${biciId}`, {
@@ -55,16 +96,12 @@ export default function KanbanPage() {
       console.error(err)
     } finally {
       setAvanzando(null)
+      setSaliendo(prev => {
+        const next = new Set(prev)
+        next.delete(biciId)
+        return next
+      })
     }
-  }
-
-  if (cargando) {
-    return (
-      <div className={styles.loadingState}>
-        <div className={styles.loadingSpinner} />
-        <span>Cargando taller…</span>
-      </div>
-    )
   }
 
   const bicisActivas = bicis.filter(b => b.estado !== 'entregada')
@@ -76,7 +113,9 @@ export default function KanbanPage() {
       <div className={styles.header}>
         <div className={styles.headerLeft}>
           <span className={styles.logo}>918</span>
-          <span className={styles.headerMeta}>{bicisActivas.length} en taller</span>
+          {!cargando && (
+            <span className={styles.headerMeta}>{bicisActivas.length} en taller</span>
+          )}
         </div>
         <div className={styles.headerRight}>
           <button
@@ -85,7 +124,7 @@ export default function KanbanPage() {
             title="Configuración del taller"
             aria-label="Configuración"
           >
-            ⚙
+            <IconoEngranaje />
           </button>
           <button
             className={styles.btnNuevo}
@@ -96,8 +135,18 @@ export default function KanbanPage() {
         </div>
       </div>
 
+      {/* Skeleton loading */}
+      {cargando && (
+        <div className={styles.kanban}>
+          <SkeletonColumna count={2} />
+          <SkeletonColumna count={2} />
+          <SkeletonColumna count={1} />
+          <SkeletonColumna count={1} />
+        </div>
+      )}
+
       {/* Empty state */}
-      {bicisActivas.length === 0 && (
+      {!cargando && bicisActivas.length === 0 && (
         <div className={styles.emptyState}>
           <div className={styles.emptyIcon}>🚲</div>
           <div className={styles.emptyTitle}>Sin bicis en el taller</div>
@@ -112,7 +161,7 @@ export default function KanbanPage() {
       )}
 
       {/* Kanban */}
-      {bicisActivas.length > 0 && (
+      {!cargando && bicisActivas.length > 0 && (
         <div className={styles.kanban}>
           {COLUMNAS.map(col => {
             const tarjetas = bicisActivas.filter(b => b.estado === col.id)
@@ -129,12 +178,16 @@ export default function KanbanPage() {
                   {tarjetas.map(bici => (
                     <div
                       key={bici.id}
-                      className={avanzando === bici.id ? styles.cardAvanzando : ''}
+                      className={[
+                        styles.cardWrapper,
+                        saliendo.has(bici.id) ? styles.cardSaliendo : '',
+                      ].join(' ')}
                     >
                       <KanbanCard
                         bici={bici}
+                        avanzando={avanzando === bici.id}
                         onAvanzar={() => handleAvanzar(bici.id, bici.estado)}
-                        onDetalle={() => router.push(`/bici/${bici.id}`)}
+                        onVerDetalle={() => router.push(`/bici/${bici.id}`)}
                       />
                     </div>
                   ))}

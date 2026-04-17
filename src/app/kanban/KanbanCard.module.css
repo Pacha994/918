@@ -22,7 +22,7 @@
   border-bottom: 1px solid var(--b1);
 }
 
-/* Header — modelo + tiempo */
+/* Header */
 .header {
   display: flex;
   justify-content: space-between;
@@ -44,7 +44,7 @@
   flex-shrink: 0;
 }
 
-/* Meta — cliente + color */
+/* Meta */
 .meta {
   display: flex;
   align-items: center;
@@ -83,6 +83,30 @@
   cursor: pointer;
   transition: all 0.12s;
   white-space: nowrap;
+  min-width: 90px;
+  min-height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
-.btnAvanzar:hover  { background: var(--or1); border-color: var(--or); }
-.btnAvanzar:active { background: rgba(255,96,26,.2); }
+.btnAvanzar:hover:not(:disabled) { background: var(--or1); border-color: var(--or); }
+.btnAvanzar:active:not(:disabled) { background: rgba(255,96,26,.2); }
+.btnAvanzar:disabled { cursor: not-allowed; }
+
+.btnAvanzandoActivo {
+  border-color: rgba(255,96,26,.2);
+  opacity: 0.7;
+}
+
+/* Spinner dentro del botón */
+.btnSpinner {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border: 1.5px solid rgba(255,96,26,.3);
+  border-top-color: var(--or);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
