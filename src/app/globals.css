@@ -45,7 +45,7 @@
   --re1: rgba(224, 80, 80, .12);
 
   /* Tipografía */
-  --f: 'Barlow Semi Condensed', sans-serif;
+  --f: var(--font-barlow), sans-serif;
 
   /* Espaciado */
   --sp-xs: 4px;

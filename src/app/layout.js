@@ -5,6 +5,7 @@ const barlow = Barlow_Semi_Condensed({
   subsets: ['latin'],
   weight: ['300', '400', '500'],
   display: 'swap',
+  variable: '--font-barlow',
 })
 
 export const metadata = {
@@ -29,8 +30,8 @@ export const viewport = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="es">
-      <body className={barlow.className}>{children}</body>
+    <html lang="es" className={barlow.variable}>
+      <body>{children}</body>
     </html>
   );
 }
