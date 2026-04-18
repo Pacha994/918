@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 
 const COOKIE_NAME    = '918_session'
-const RUTAS_PRIVADAS = ['/kanban']
+const RUTAS_PRIVADAS = ['/kanban', '/registro', '/configuracion', '/bici']
 const RUTAS_PUBLICAS = ['/login', '/onboarding']
 
 export function middleware(request) {
@@ -24,5 +24,17 @@ export function middleware(request) {
 }
 
 export const config = {
-  matcher: ['/kanban', '/kanban/:path*', '/login', '/onboarding', '/onboarding/:path*'],
+  matcher: [
+    '/kanban',
+    '/kanban/:path*',
+    '/registro',
+    '/registro/:path*',
+    '/configuracion',
+    '/configuracion/:path*',
+    '/bici',
+    '/bici/:path*',
+    '/login',
+    '/onboarding',
+    '/onboarding/:path*',
+  ],
 }

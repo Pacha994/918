@@ -21,6 +21,13 @@ const ESTADO_SIGUIENTE_LABEL = {
   lista:       'Marcar como Entregada',
 }
 
+const TIPO_SERVICIO_LABEL = {
+  basico:      'Service básico',
+  completo:    'Service completo',
+  premium:     'Service premium',
+  diagnostico: 'Solo diagnóstico',
+}
+
 export default function DetalleBici({ bici, onClose, onAvanzar }) {
   const [avanzando,       setAvanzando]       = useState(false)
   const [fotoActiva,      setFotoActiva]       = useState(null)
@@ -120,7 +127,9 @@ export default function DetalleBici({ bici, onClose, onAvanzar }) {
         {bici.tipoServicio && (
           <div className={styles.seccion}>
             <div className={styles.seccionLabel}>Servicio</div>
-            <div className={styles.descripcion}>{bici.tipoServicio}</div>
+            <div className={styles.descripcion}>
+              {TIPO_SERVICIO_LABEL[bici.tipoServicio] || bici.tipoServicio}
+            </div>
           </div>
         )}
 

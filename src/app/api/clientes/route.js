@@ -7,7 +7,9 @@ export async function GET(request) {
     const wa = request.nextUrl.searchParams.get('whatsapp')?.trim()
     if (!wa) return NextResponse.json(null, { status: 400 })
 
+    // Normalizar: buscar con y sin prefijo 54
     const candidatos = [wa, `54${wa}`, wa.replace(/^54/, '')]
+
     const cliente = await prisma.cliente.findFirst({
       where: { tallerId: TALLER_ID, whatsapp: { in: candidatos } },
     })

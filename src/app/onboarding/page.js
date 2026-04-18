@@ -122,6 +122,7 @@ export default function OnboardingPage() {
     setGuardando(true)
     setError(null)
     try {
+      // 1. Guardar taller
       const res = await fetch('/api/taller', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -137,6 +138,14 @@ export default function OnboardingPage() {
         }),
       })
       if (!res.ok) throw new Error('Error al guardar')
+
+      // 2. Setear cookie de sesión
+      await fetch('/api/auth/login', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ whatsapp: whatsapp.trim() }),
+      })
+
       avanzar()
     } catch (err) {
       console.error(err)

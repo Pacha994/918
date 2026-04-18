@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-
-const TALLER_ID = process.env.TALLER_ID || 'taller-seed-id'
+import { TALLER_ID } from '@/lib/config'
 
 export async function GET() {
   try {
@@ -29,20 +28,22 @@ export async function POST(request) {
     const body = await request.json()
     const { cliente, bici, fotos } = body
 
-    let clienteRecord = await prisma.cliente.findUnique({
-      where: {
-        whatsapp_tallerId: {
-          whatsapp: cliente.whatsapp || '',
-          tallerId: TALLER_ID
-        }
-      }
+    if (!cliente.whatsapp?.trim()) {
+      return NextResponse.json({ error: 'WhatsApp requerido' }, { status: 400 })
+    }
+
+    const wa = cliente.whatsapp.trim()
+    const candidatos = [wa, `54${wa}`, wa.replace(/^54/, '')]
+
+    let clienteRecord = await prisma.cliente.findFirst({
+      where: { tallerId: TALLER_ID, whatsapp: { in: candidatos } }
     })
 
     if (!clienteRecord) {
       clienteRecord = await prisma.cliente.create({
         data: {
           nombre:   cliente.nombre,
-          whatsapp: cliente.whatsapp || '',
+          whatsapp: wa,
           tallerId: TALLER_ID,
         }
       })
