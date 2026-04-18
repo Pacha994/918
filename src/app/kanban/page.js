@@ -4,8 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import styles from './kanban.module.css'
 import KanbanCard from './KanbanCard'
-
-const TALLER_ID = 'cmo1pymo80000v58afkeey7so'
+import DetalleBici from './DetalleBici'
 
 const COLUMNAS = [
   { id: 'ingresada',   label: 'Ingresada',   color: 'bl' },
@@ -45,14 +44,15 @@ function SkeletonColumna({ count = 2 }) {
 
 export default function KanbanPage() {
   const router = useRouter()
-  const [bicis,    setBicis]    = useState([])
-  const [cargando, setCargando] = useState(true)
-  const [avanzando, setAvanzando] = useState(null)
-  const [saliendo,  setSaliendo]  = useState(new Set())
+  const [bicis,        setBicis]        = useState([])
+  const [cargando,     setCargando]     = useState(true)
+  const [avanzando,    setAvanzando]    = useState(null)
+  const [saliendo,     setSaliendo]     = useState(new Set())
+  const [biciDetalle,  setBiciDetalle]  = useState(null) // bici abierta en el sheet
 
   const cargarBicis = useCallback(async () => {
     try {
-      const res = await fetch(`/api/bicis?tallerId=${TALLER_ID}`)
+      const res = await fetch('/api/bicis')
       if (!res.ok) throw new Error('Error al cargar bicis')
       const data = await res.json()
       setBicis(data)
@@ -65,23 +65,33 @@ export default function KanbanPage() {
 
   useEffect(() => { cargarBicis() }, [cargarBicis])
 
+  const handleVerDetalle = (bici) => {
+    setBiciDetalle(bici)
+  }
+
+  const handleCerrarDetalle = () => {
+    setBiciDetalle(null)
+  }
+
+  const handleAvanzarDesdeSheet = async (biciId) => {
+    await cargarBicis()
+    setBiciDetalle(null)
+  }
+
   const handleAvanzar = async (biciId, estadoActual) => {
     const orden = ['ingresada', 'diagnostico', 'reparacion', 'lista', 'entregada']
     const idx   = orden.indexOf(estadoActual)
     if (idx < 0 || idx >= orden.length - 1) return
 
-    // Háptico
     if (typeof navigator !== 'undefined' && navigator.vibrate) {
       navigator.vibrate(30)
     }
 
     const nuevoEstado = orden[idx + 1]
 
-    // Trigger animación exit
     setSaliendo(prev => new Set(prev).add(biciId))
     setAvanzando(biciId)
 
-    // Esperar que termine la animación antes del PATCH
     await new Promise(r => setTimeout(r, 280))
 
     try {
@@ -187,7 +197,7 @@ export default function KanbanPage() {
                         bici={bici}
                         avanzando={avanzando === bici.id}
                         onAvanzar={() => handleAvanzar(bici.id, bici.estado)}
-                        onVerDetalle={() => router.push(`/bici/${bici.id}`)}
+                        onVerDetalle={() => handleVerDetalle(bici)}
                       />
                     </div>
                   ))}
@@ -196,6 +206,15 @@ export default function KanbanPage() {
             )
           })}
         </div>
+      )}
+
+      {/* Bottom sheet - montado sobre el kanban */}
+      {biciDetalle && (
+        <DetalleBici
+          bici={biciDetalle}
+          onClose={handleCerrarDetalle}
+          onAvanzar={handleAvanzarDesdeSheet}
+        />
       )}
 
     </div>

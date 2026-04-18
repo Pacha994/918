@@ -21,6 +21,12 @@ const ESTADO_SIGUIENTE_LABEL = {
   lista:       'Marcar como Entregada',
 }
 
+const ESTADO_ANTERIOR_LABEL = {
+  diagnostico: 'Volver a Ingresada',
+  reparacion:  'Volver a Diagnóstico',
+  lista:       'Volver a Reparación',
+}
+
 const TIPO_SERVICIO_LABEL = {
   basico:      'Service básico',
   completo:    'Service completo',
@@ -29,21 +35,38 @@ const TIPO_SERVICIO_LABEL = {
 }
 
 export default function DetalleBici({ bici, onClose, onAvanzar }) {
-  const [avanzando,       setAvanzando]       = useState(false)
-  const [fotoActiva,      setFotoActiva]       = useState(null)
-  const [mostrarForm,     setMostrarForm]      = useState(false)
-  const [hallazgos,       setHallazgos]        = useState(bici.hallazgos || [])
-  const [resolviendoId,   setResolviendoId]    = useState(null)
+  const [avanzando,     setAvanzando]     = useState(false)
+  const [retrocediendo, setRetrocediendo] = useState(false)
+  const [fotoActiva,    setFotoActiva]    = useState(null)
+  const [mostrarForm,   setMostrarForm]   = useState(false)
+  const [hallazgos,     setHallazgos]     = useState(bici.hallazgos || [])
+  const [resolviendoId, setResolviendoId] = useState(null)
 
   const indexEstado  = ESTADOS.indexOf(bici.estado)
   const hayPendiente = hallazgos.some(h => h.estado === 'pendiente')
-  const puedeAvanzar = bici.estado !== 'entregada' && !hayPendiente
+  const puedeRetroceder = indexEstado > 0 && bici.estado !== 'entregada' && ESTADO_ANTERIOR_LABEL[bici.estado]
 
   const handleAvanzar = async () => {
     setAvanzando(true)
     await onAvanzar(bici.id)
     setAvanzando(false)
-    onClose()
+  }
+
+  const handleRetroceder = async () => {
+    setRetrocediendo(true)
+    const estadoAnterior = ESTADOS[indexEstado - 1]
+    try {
+      await fetch(`/api/bicis/${bici.id}`, {
+        method:  'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ estado: estadoAnterior }),
+      })
+      await onAvanzar(bici.id) // reusar el callback para recargar y cerrar
+    } catch (err) {
+      console.error('Error retrocediendo estado:', err)
+    } finally {
+      setRetrocediendo(false)
+    }
   }
 
   const handleHallazgoCreado = (hallazgo) => {
@@ -147,12 +170,14 @@ export default function DetalleBici({ bici, onClose, onAvanzar }) {
             <div className={styles.seccionLabel}>
               Hallazgos {hallazgos.length > 0 && `(${hallazgos.length})`}
             </div>
-            {bici.estado !== 'entregada' && (
-              <button className={styles.btnReportar} onClick={() => setMostrarForm(true)}>
-                + Reportar
-              </button>
-            )}
           </div>
+
+          {/* Botón Reportar - peso visual alto */}
+          {bici.estado !== 'entregada' && (
+            <button className={styles.btnReportar} onClick={() => setMostrarForm(true)}>
+              + Reportar hallazgo
+            </button>
+          )}
 
           {hallazgos.length === 0 ? (
             <div className={styles.hallazgosVacio}>Sin hallazgos registrados</div>
@@ -182,7 +207,6 @@ export default function DetalleBici({ bici, onClose, onAvanzar }) {
                     </div>
                   </div>
 
-                  {/* Simulación de respuesta del cliente — solo en pendiente */}
                   {h.estado === 'pendiente' && (
                     <div className={styles.hallazgoSimular}>
                       <span className={styles.simularLabel}>Simular respuesta del cliente:</span>
@@ -233,6 +257,15 @@ export default function DetalleBici({ bici, onClose, onAvanzar }) {
         {/* Footer */}
         {bici.estado !== 'entregada' ? (
           <div className={styles.footer}>
+            {puedeRetroceder && (
+              <button
+                className={styles.btnRetroceder}
+                onClick={handleRetroceder}
+                disabled={retrocediendo || avanzando}
+              >
+                {retrocediendo ? '...' : '← ' + ESTADO_ANTERIOR_LABEL[bici.estado]}
+              </button>
+            )}
             {hayPendiente ? (
               <button className={styles.btnAvanzar} disabled>
                 {ESTADO_SIGUIENTE_LABEL[bici.estado]} · presupuesto pendiente
@@ -241,7 +274,7 @@ export default function DetalleBici({ bici, onClose, onAvanzar }) {
               <button
                 className={styles.btnAvanzar}
                 onClick={handleAvanzar}
-                disabled={avanzando}
+                disabled={avanzando || retrocediendo}
               >
                 {avanzando ? 'Avanzando...' : ESTADO_SIGUIENTE_LABEL[bici.estado]}
               </button>
