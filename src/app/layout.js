@@ -1,4 +1,11 @@
+import { Barlow_Semi_Condensed } from 'next/font/google'
 import "./globals.css";
+
+const barlow = Barlow_Semi_Condensed({
+  subsets: ['latin'],
+  weight: ['300', '400', '500'],
+  display: 'swap',
+})
 
 export const metadata = {
   title: "918",
@@ -23,13 +30,7 @@ export const viewport = {
 export default function RootLayout({ children }) {
   return (
     <html lang="es">
-      <head>
-        <link
-          href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@300;400;500&display=swap"
-          rel="stylesheet"
-        />
-      </head>
-      <body>{children}</body>
+      <body className={barlow.className}>{children}</body>
     </html>
   );
 }

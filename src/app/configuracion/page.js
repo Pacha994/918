@@ -89,7 +89,7 @@ export default function ConfiguracionPage() {
   // ── Servicios helpers ──
   const handlePrecioChange = (idx, val) => {
     const nuevo = [...servicios]
-    nuevo[idx] = { ...nuevo[idx], precio: Number(val) || 0 }
+    nuevo[idx] = { ...nuevo[idx], precio: val }
     setServicios(nuevo)
   }
 
@@ -129,7 +129,7 @@ export default function ConfiguracionPage() {
       const res = await fetch('/api/taller', {
         method:  'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ nombre: nombre.trim(), servicios }),
+        body:    JSON.stringify({ nombre: nombre.trim(), servicios: servicios.map(s => ({ ...s, precio: Number(s.precio) || 0 })) }),
       })
       if (!res.ok) throw new Error('Error al guardar')
       setExito(true)
@@ -244,7 +244,7 @@ export default function ConfiguracionPage() {
                         className={styles.precioInput}
                         type="number"
                         inputMode="numeric"
-                        value={srv.precio ?? 0}
+                        value={srv.precio ?? ''}
                         onChange={e => handlePrecioChange(sIdx, e.target.value)}
                       />
                     </div>
