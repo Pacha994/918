@@ -33,10 +33,17 @@ function agruparPorMes(items) {
     if (!mapa.has(clave)) mapa.set(clave, { label, items: [] })
     mapa.get(clave).items.push(item)
   }
-  // Ordena claves desc (más reciente primero)
   return Array.from(mapa.entries())
     .sort((a, b) => b[0].localeCompare(a[0]))
     .map(([, grupo]) => grupo)
+}
+
+// ─── Tooltips ─────────────────────────────────────────────────────────────────
+
+const TOOLTIPS = {
+  servicios: 'Cantidad de servicios cerrados este mes',
+  tiempo:    'Promedio de días entre ingreso y entrega',
+  ingresos:  'Suma de precios de servicios cerrados este mes',
 }
 
 // ─── Iconos ───────────────────────────────────────────────────────────────────
@@ -51,9 +58,17 @@ function IconoAtras() {
 
 // ─── Componentes ──────────────────────────────────────────────────────────────
 
-function MetricCard({ valor, label, loading }) {
+function MetricCard({ valor, label, tooltipKey, tooltipActivo, onToggleTooltip, loading }) {
+  const activo = tooltipActivo === tooltipKey
   return (
-    <div className={styles.metricCard}>
+    <div className={`${styles.metricCard} ${activo ? styles.metricCardActivo : ''}`}>
+      <button
+        className={styles.metricInfoBtn}
+        onClick={() => onToggleTooltip(tooltipKey)}
+        aria-label="Información"
+      >
+        ⓘ
+      </button>
       {loading
         ? <div className={styles.metricSkeleton} />
         : <div className={styles.metricValor}>{valor ?? '—'}</div>
@@ -72,10 +87,11 @@ function SkeletonItems({ n = 5 }) {
 // ─── Página ───────────────────────────────────────────────────────────────────
 
 export default function HistorialPage() {
-  const router  = useRouter()
-  const [items,   setItems]   = useState([])
-  const [resumen, setResumen] = useState(null)
+  const router   = useRouter()
+  const [items,    setItems]    = useState([])
+  const [resumen,  setResumen]  = useState(null)
   const [cargando, setCargando] = useState(true)
+  const [tooltipActivo, setTooltipActivo] = useState(null)
 
   useEffect(() => {
     async function cargar() {
@@ -105,6 +121,10 @@ export default function HistorialPage() {
     month: 'long', year: 'numeric',
   })
 
+  const handleToggleTooltip = (key) => {
+    setTooltipActivo(prev => prev === key ? null : key)
+  }
+
   return (
     <div className={styles.page}>
 
@@ -123,20 +143,32 @@ export default function HistorialPage() {
         <div className={styles.metricsGrid}>
           <MetricCard
             valor={resumen ? String(resumen.count) : null}
-            label="servicios"
+            label="Servicios"
+            tooltipKey="servicios"
+            tooltipActivo={tooltipActivo}
+            onToggleTooltip={handleToggleTooltip}
             loading={cargando}
           />
           <MetricCard
-            valor={resumen ? `${resumen.avgDias}d` : null}
-            label="prom. en taller"
+            valor={resumen ? `${resumen.avgDias} días` : null}
+            label="Tiempo prom. en taller"
+            tooltipKey="tiempo"
+            tooltipActivo={tooltipActivo}
+            onToggleTooltip={handleToggleTooltip}
             loading={cargando}
           />
           <MetricCard
             valor={resumen ? formatPrecio(resumen.revenue) : null}
-            label="revenue"
+            label="Ingresos"
+            tooltipKey="ingresos"
+            tooltipActivo={tooltipActivo}
+            onToggleTooltip={handleToggleTooltip}
             loading={cargando}
           />
         </div>
+        {tooltipActivo && (
+          <div className={styles.tooltipGlobal}>{TOOLTIPS[tooltipActivo]}</div>
+        )}
       </div>
 
       {/* Lista */}
@@ -156,14 +188,14 @@ export default function HistorialPage() {
 
       {!cargando && grupos.length > 0 && (
         <div className={styles.lista}>
-          {grupos.map(grupo => (
-            <div key={grupo.label} className={styles.mesGrupo}>
+          {grupos.map((grupo, gi) => (
+            <div key={grupo.label} className={`${styles.mesGrupo} ${gi > 0 ? styles.mesGrupoNoFirst : ''}`}>
               <div className={styles.mesHeader}>
                 <span className={styles.mesLabel}>{grupo.label}</span>
                 <span className={styles.mesCount}>{grupo.items.length}</span>
               </div>
-              {grupo.items.map(item => (
-                <div key={item.id} className={styles.item}>
+              {grupo.items.map((item, ii) => (
+                <div key={item.id} className={`${styles.item} ${ii === 0 ? styles.itemFirst : ''}`}>
                   <div className={styles.itemTop}>
                     <span className={styles.itemCliente}>{item.cliente?.nombre || '—'}</span>
                     <span className={styles.itemFecha}>{formatFechaCorta(item.deliveredAt)}</span>

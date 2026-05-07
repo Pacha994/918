@@ -75,7 +75,30 @@
   flex-direction: column;
   gap: 4px;
   min-width: 0;
+  position: relative;
+  transition: border-color .12s, background .12s;
 }
+
+.metricCardActivo {
+  background: var(--bg3);
+  border-color: var(--b3);
+}
+
+.metricInfoBtn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  background: none;
+  border: none;
+  color: var(--t4);
+  cursor: pointer;
+  font-size: 13px;
+  line-height: 1;
+  padding: 2px 3px;
+  border-radius: 4px;
+  transition: color .1s, background .1s;
+}
+.metricInfoBtn:hover { color: var(--t2); background: var(--bg3); }
 
 .metricValor {
   font-size: 20px;
@@ -85,6 +108,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  padding-right: 14px;
 }
 
 .metricLabel {
@@ -103,6 +127,23 @@
   margin-bottom: 4px;
 }
 
+.tooltipGlobal {
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--t3);
+  line-height: 1.4;
+  padding: 8px 10px;
+  background: var(--bg3);
+  border: 1px solid var(--b2);
+  border-radius: var(--r-input);
+  animation: fadeIn .12s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
 /* ── LISTA ── */
 .lista {
   display: flex;
@@ -116,32 +157,39 @@
   flex-direction: column;
 }
 
+.mesGrupoNoFirst {
+  margin-top: 28px;
+}
+
 .mesHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 16px 8px;
+  padding: 12px 16px;
   position: sticky;
   top: 53px;
-  background: var(--bg);
+  background: #1e1e1e;
   z-index: 5;
-  border-bottom: 1px solid var(--b1);
+  border-top: 1px solid var(--b2);
+  border-bottom: 1px solid var(--b2);
 }
 
 .mesLabel {
-  font-size: 13px;
-  font-weight: 500;
+  font-size: 12px;
+  font-weight: 600;
   color: var(--t2);
-  text-transform: capitalize;
+  text-transform: uppercase;
+  letter-spacing: .1em;
 }
 
 .mesCount {
-  font-size: 12px;
-  color: var(--t4);
-  background: var(--bg2);
-  border: 1px solid var(--b2);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--or);
+  background: rgba(255, 96, 26, .12);
+  border: 1px solid rgba(255, 96, 26, .3);
   border-radius: 10px;
-  padding: 1px 7px;
+  padding: 2px 8px;
 }
 
 /* ── ITEM ── */
@@ -155,6 +203,10 @@
 }
 .item:last-child { border-bottom: none; }
 .item:active { background: var(--bg2); }
+
+.itemFirst {
+  padding-top: 14px;
+}
 
 .itemTop {
   display: flex;
