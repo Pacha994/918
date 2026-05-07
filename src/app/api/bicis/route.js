@@ -6,6 +6,7 @@ export async function GET() {
   try {
     const hoyUTC = new Date()
     hoyUTC.setUTCHours(0, 0, 0, 0)
+    console.log('GET /api/bicis hoyUTC:', hoyUTC.toISOString())
 
     const bicis = await prisma.bici.findMany({
       where: {
@@ -22,9 +23,10 @@ export async function GET() {
       },
       orderBy: { creadoEn: 'desc' }
     })
+    console.log('GET /api/bicis resultado:', bicis.length, 'bicis')
     return NextResponse.json(bicis)
   } catch (error) {
-    console.error('GET /api/bicis:', error)
+    console.error('GET /api/bicis error:', error.message, error.code)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
