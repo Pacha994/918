@@ -173,6 +173,7 @@
 .colHeader[data-color='ye'] .colLabel { color: var(--ye); }
 .colHeader[data-color='or'] .colLabel { color: var(--or); }
 .colHeader[data-color='gr'] .colLabel { color: var(--gr); }
+.colHeader[data-color='re'] .colLabel { color: var(--re); }
 
 .colLabel {
   font-size: 12px;

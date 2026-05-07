@@ -11,6 +11,7 @@ const COLUMNAS = [
   { id: 'diagnostico', label: 'Diagnóstico', color: 'ye' },
   { id: 'reparacion',  label: 'Reparación',  color: 'or' },
   { id: 'lista',       label: 'Lista',       color: 'gr' },
+  { id: 'entregada',   label: 'Entregada',   color: 're' },
 ]
 
 function IconoEngranaje() {
@@ -18,6 +19,15 @@ function IconoEngranaje() {
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
       <circle cx="12" cy="12" r="3" />
       <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+    </svg>
+  )
+}
+
+function IconoHistorial() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10" />
+      <polyline points="12 6 12 12 16 14" />
     </svg>
   )
 }
@@ -44,11 +54,11 @@ function SkeletonColumna({ count = 2 }) {
 
 export default function KanbanPage() {
   const router = useRouter()
-  const [bicis,        setBicis]        = useState([])
-  const [cargando,     setCargando]     = useState(true)
-  const [avanzando,    setAvanzando]    = useState(null)
-  const [saliendo,     setSaliendo]     = useState(new Set())
-  const [biciDetalle,  setBiciDetalle]  = useState(null) // bici abierta en el sheet
+  const [bicis,       setBicis]       = useState([])
+  const [cargando,    setCargando]    = useState(true)
+  const [avanzando,   setAvanzando]   = useState(null)
+  const [saliendo,    setSaliendo]    = useState(new Set())
+  const [biciDetalle, setBiciDetalle] = useState(null)
 
   const cargarBicis = useCallback(async () => {
     try {
@@ -65,15 +75,10 @@ export default function KanbanPage() {
 
   useEffect(() => { cargarBicis() }, [cargarBicis])
 
-  const handleVerDetalle = (bici) => {
-    setBiciDetalle(bici)
-  }
+  const handleVerDetalle = (bici) => setBiciDetalle(bici)
+  const handleCerrarDetalle = () => setBiciDetalle(null)
 
-  const handleCerrarDetalle = () => {
-    setBiciDetalle(null)
-  }
-
-  const handleAvanzarDesdeSheet = async (biciId) => {
+  const handleAvanzarDesdeSheet = async () => {
     await cargarBicis()
     setBiciDetalle(null)
   }
@@ -91,14 +96,13 @@ export default function KanbanPage() {
 
     setSaliendo(prev => new Set(prev).add(biciId))
     setAvanzando(biciId)
-
     await new Promise(r => setTimeout(r, 280))
 
     try {
       const res = await fetch(`/api/bicis/${biciId}`, {
         method:  'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ estado: nuevoEstado }),
+        body:    JSON.stringify({ status: nuevoEstado }),
       })
       if (!res.ok) throw new Error('Error al avanzar estado')
       await cargarBicis()
@@ -119,7 +123,6 @@ export default function KanbanPage() {
   return (
     <div className={styles.page}>
 
-      {/* Header */}
       <div className={styles.header}>
         <div className={styles.headerLeft}>
           <span className={styles.logo}>918</span>
@@ -128,6 +131,14 @@ export default function KanbanPage() {
           )}
         </div>
         <div className={styles.headerRight}>
+          <button
+            className={styles.btnConfig}
+            onClick={() => router.push('/historial')}
+            title="Historial de servicios"
+            aria-label="Historial"
+          >
+            <IconoHistorial />
+          </button>
           <button
             className={styles.btnConfig}
             onClick={() => router.push('/configuracion')}
@@ -145,7 +156,6 @@ export default function KanbanPage() {
         </div>
       </div>
 
-      {/* Skeleton loading */}
       {cargando && (
         <div className={styles.kanban}>
           <SkeletonColumna count={2} />
@@ -155,8 +165,7 @@ export default function KanbanPage() {
         </div>
       )}
 
-      {/* Empty state */}
-      {!cargando && bicisActivas.length === 0 && (
+      {!cargando && bicis.length === 0 && (
         <div className={styles.emptyState}>
           <div className={styles.emptyIcon}>🚲</div>
           <div className={styles.emptyTitle}>Sin bicis en el taller</div>
@@ -170,11 +179,10 @@ export default function KanbanPage() {
         </div>
       )}
 
-      {/* Kanban */}
-      {!cargando && bicisActivas.length > 0 && (
+      {!cargando && bicis.length > 0 && (
         <div className={styles.kanban}>
           {COLUMNAS.map(col => {
-            const tarjetas = bicisActivas.filter(b => b.estado === col.id)
+            const tarjetas = bicis.filter(b => b.estado === col.id)
             return (
               <div key={col.id} className={styles.columna}>
                 <div className={styles.colHeader} data-color={col.color}>
@@ -208,7 +216,6 @@ export default function KanbanPage() {
         </div>
       )}
 
-      {/* Bottom sheet - montado sobre el kanban */}
       {biciDetalle && (
         <DetalleBici
           bici={biciDetalle}

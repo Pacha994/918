@@ -1,0 +1,163 @@
+/* ── PAGE ── */
+.page {
+  min-height: 100vh;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── HEADER ── */
+.header {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--b1);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  height: 53px;
+  box-sizing: border-box;
+  gap: 8px;
+}
+
+.btnAtras {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--t3);
+  cursor: pointer;
+  padding: 8px;
+  border-radius: var(--r-input);
+  transition: color .12s, background .12s;
+  flex-shrink: 0;
+}
+.btnAtras:hover { color: var(--t1); background: var(--bg2); }
+
+.titulo {
+  font-size: 17px;
+  font-weight: 500;
+  color: var(--t1);
+}
+
+.headerSpacer {
+  flex: 1;
+}
+
+/* ── SKELETON ── */
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+.skeletonList {
+  display: flex;
+  flex-direction: column;
+  padding: 12px 16px;
+  gap: 8px;
+}
+
+.skeletonItem {
+  height: 72px;
+  border-radius: var(--r-card);
+  background: linear-gradient(90deg, var(--bg2) 25%, var(--bg3) 50%, var(--bg2) 75%);
+  background-size: 800px 100%;
+  animation: shimmer 1.4s infinite linear;
+}
+
+/* ── EMPTY STATE ── */
+.emptyState {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 48px 24px;
+  text-align: center;
+}
+.emptyIcon  { font-size: 40px; margin-bottom: 4px; }
+.emptyTitle { font-size: 17px; color: var(--t2); }
+.emptyDesc  { font-size: 14px; color: var(--t4); max-width: 260px; line-height: 1.5; }
+
+/* ── LISTA ── */
+.lista {
+  display: flex;
+  flex-direction: column;
+  padding: 8px 16px;
+  gap: 1px;
+}
+
+.item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--b1);
+}
+.item:last-child { border-bottom: none; }
+
+.itemTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.itemCliente {
+  font-size: 15px;
+  color: var(--t1);
+  font-weight: 500;
+}
+
+.badgeEntregada {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: var(--r-badge);
+  background: var(--gr1);
+  color: var(--gr);
+  font-weight: 500;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.itemModelo {
+  font-size: 13px;
+  color: var(--t3);
+}
+
+.itemFecha {
+  font-size: 12px;
+  color: var(--t4);
+}
+
+/* ── CARGAR MÁS ── */
+.cargarMasWrap {
+  padding: 16px;
+}
+
+.btnCargarMas {
+  font-family: var(--f);
+  font-size: 14px;
+  padding: 12px;
+  width: 100%;
+  background: transparent;
+  color: var(--t3);
+  border: 1px solid var(--b2);
+  border-radius: var(--r-input);
+  cursor: pointer;
+  transition: all .12s;
+  text-align: center;
+}
+.btnCargarMas:hover    { color: var(--t1); border-color: var(--b3); background: var(--bg2); }
+.btnCargarMas:disabled { opacity: .5; cursor: not-allowed; }
+
+.finLista {
+  text-align: center;
+  font-size: 12px;
+  color: var(--t4);
+  padding: 16px;
+}

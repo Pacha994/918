@@ -1,47 +1,42 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
-const ESTADOS = ['ingresada', 'diagnostico', 'reparacion', 'lista', 'entregada']
+const ESTADOS_VALIDOS = ['ingresada', 'diagnostico', 'reparacion', 'lista', 'entregada']
 
 export async function PATCH(request, { params }) {
   try {
     const { id } = await params
     const body = await request.json().catch(() => ({}))
+    const { status, archivarAhora } = body
 
-    // Si viene estado explícito, usarlo directo
-    if (body.estado) {
-      const bici = await prisma.bici.update({
-        where: { id },
-        data: { estado: body.estado },
-        include: { cliente: true, fotos: true }
-      })
-      return NextResponse.json(bici)
+    if (!status || !ESTADOS_VALIDOS.includes(status)) {
+      return NextResponse.json({ error: 'Status inválido' }, { status: 400 })
     }
 
-    // Avanzar al siguiente estado
-    const biciActual = await prisma.bici.findUnique({
-      where: { id }
-    })
+    const data = { estado: status }
 
-    if (!biciActual) {
-      return NextResponse.json({ error: 'Bici no encontrada' }, { status: 404 })
+    if (status === 'entregada') {
+      if (archivarAhora) {
+        // Fuerza salida inmediata del kanban: deliveredAt antes de medianoche de hoy UTC
+        const hoyUTC = new Date()
+        hoyUTC.setUTCHours(0, 0, 0, 0)
+        data.deliveredAt = new Date(hoyUTC.getTime() - 1)
+      } else {
+        data.deliveredAt = new Date()
+      }
     }
-
-    const indexActual = ESTADOS.indexOf(biciActual.estado)
-    if (indexActual === -1 || indexActual === ESTADOS.length - 1) {
-      return NextResponse.json({ error: 'No se puede avanzar más' }, { status: 400 })
-    }
-
-    const nuevoEstado = ESTADOS[indexActual + 1]
 
     const bici = await prisma.bici.update({
       where: { id },
-      data: { estado: nuevoEstado },
+      data,
       include: { cliente: true, fotos: true }
     })
 
     return NextResponse.json(bici)
   } catch (error) {
+    if (error.code === 'P2025') {
+      return NextResponse.json({ error: 'Bici no encontrada' }, { status: 404 })
+    }
     console.error('PATCH /api/bicis/[id]:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }

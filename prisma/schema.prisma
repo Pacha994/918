@@ -40,6 +40,7 @@ model Bici {
   problemas    String[]
   notas        String?
   creadoEn     DateTime   @default(now())
+  deliveredAt  DateTime?
   clienteId    String
   cliente      Cliente    @relation(fields: [clienteId], references: [id])
   tallerId     String

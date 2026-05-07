@@ -4,10 +4,16 @@ import { TALLER_ID } from '@/lib/config'
 
 export async function GET() {
   try {
+    const hoyUTC = new Date()
+    hoyUTC.setUTCHours(0, 0, 0, 0)
+
     const bicis = await prisma.bici.findMany({
       where: {
         tallerId: TALLER_ID,
-        estado: { not: 'entregada' }
+        OR: [
+          { estado: { not: 'entregada' } },
+          { estado: 'entregada', deliveredAt: { gte: hoyUTC } },
+        ],
       },
       include: {
         cliente:   true,

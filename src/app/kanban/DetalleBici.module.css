@@ -54,7 +54,7 @@
 }
 .btnCerrar:hover { color:var(--t2); }
 
-/* ── BICI INFO ── */
+/* ── BICI INFO + BADGE ── */
 .biciRow {
   display: flex; flex-wrap:wrap; align-items:baseline;
   gap:6px; padding:12px 16px;
@@ -63,6 +63,22 @@
 .biciModelo { font-size:17px; color:var(--t1); font-weight:500; }
 .biciColor  { font-size:13px; color:var(--t4); }
 .biciColor::before { content:'·'; margin-right:6px; color:var(--b3); }
+
+/* Badge de estado */
+.estadoBadge {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: var(--r-badge);
+  font-weight: 500;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  margin-left: auto;
+}
+.estadoBadge_ingresada   { background: var(--bl1);  color: var(--bl); }
+.estadoBadge_diagnostico { background: var(--ye1);  color: var(--ye); }
+.estadoBadge_reparacion  { background: var(--or1);  color: var(--or); }
+.estadoBadge_lista       { background: var(--gr1);  color: var(--gr); }
+.estadoBadge_entregada   { background: var(--gr1);  color: var(--gr); }
 
 /* ── TIMELINE ── */
 .timeline {
@@ -107,8 +123,16 @@
 }
 .foto:hover { opacity:.85; }
 
-/* ── FECHA ── */
-.fecha { padding:10px 16px 12px; font-size:12px; color:var(--t4); }
+/* ── FECHAS ── */
+.fechas {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 16px 12px;
+  font-size: 12px;
+  color: var(--t4);
+}
+.fechaEntrega { color: var(--gr); }
 
 /* ── FOOTER ── */
 .footer {
@@ -145,7 +169,24 @@
 .btnRetroceder:hover    { color: var(--t2); border-color: var(--b3); }
 .btnRetroceder:disabled { opacity: .4; cursor: not-allowed; }
 
-.entregadaMsg { text-align:center; font-size:14px; color:var(--gr); padding:8px; }
+.entregadaMsg { text-align:center; font-size:14px; color:var(--gr); padding:4px; }
+
+.btnCerrarServicio {
+  font-family: var(--f);
+  font-size: 14px;
+  padding: 12px;
+  width: 100%;
+  background: transparent;
+  color: var(--re);
+  border: 1px solid rgba(224,80,80,.35);
+  border-radius: var(--r-input);
+  cursor: pointer;
+  transition: all .12s;
+  text-align: center;
+  font-weight: 500;
+}
+.btnCerrarServicio:hover    { background: var(--re1); border-color: var(--re); }
+.btnCerrarServicio:disabled { opacity: .4; cursor: not-allowed; }
 
 /* ── LIGHTBOX ── */
 .lightbox {
@@ -166,7 +207,6 @@
 }
 .hallazgosHeader .seccionLabel { margin-bottom: 0; }
 
-/* Botón Reportar - peso visual alto, ocupa ancho completo */
 .btnReportar {
   font-family: var(--f);
   font-size: 15px;
@@ -236,7 +276,6 @@
 .badge_aprobado  { background: var(--gr1); color: var(--gr); }
 .badge_rechazado { background: var(--b2);  color: var(--t4); }
 
-/* Simulación de respuesta */
 .hallazgoSimular {
   display: flex;
   align-items: center;

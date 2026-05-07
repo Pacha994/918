@@ -35,37 +35,63 @@ const TIPO_SERVICIO_LABEL = {
 }
 
 export default function DetalleBici({ bici, onClose, onAvanzar }) {
-  const [avanzando,     setAvanzando]     = useState(false)
-  const [retrocediendo, setRetrocediendo] = useState(false)
-  const [fotoActiva,    setFotoActiva]    = useState(null)
-  const [mostrarForm,   setMostrarForm]   = useState(false)
-  const [hallazgos,     setHallazgos]     = useState(bici.hallazgos || [])
-  const [resolviendoId, setResolviendoId] = useState(null)
+  const [avanzando,       setAvanzando]       = useState(false)
+  const [retrocediendo,   setRetrocediendo]   = useState(false)
+  const [cerrandoServicio, setCerrandoServicio] = useState(false)
+  const [fotoActiva,      setFotoActiva]      = useState(null)
+  const [mostrarForm,     setMostrarForm]     = useState(false)
+  const [hallazgos,       setHallazgos]       = useState(bici.hallazgos || [])
+  const [resolviendoId,   setResolviendoId]   = useState(null)
 
-  const indexEstado  = ESTADOS.indexOf(bici.estado)
-  const hayPendiente = hallazgos.some(h => h.estado === 'pendiente')
+  const indexEstado    = ESTADOS.indexOf(bici.estado)
+  const hayPendiente   = hallazgos.some(h => h.estado === 'pendiente')
   const puedeRetroceder = indexEstado > 0 && bici.estado !== 'entregada' && ESTADO_ANTERIOR_LABEL[bici.estado]
 
   const handleAvanzar = async () => {
     setAvanzando(true)
-    await onAvanzar(bici.id)
-    setAvanzando(false)
-  }
-
-  const handleRetroceder = async () => {
-    setRetrocediendo(true)
-    const estadoAnterior = ESTADOS[indexEstado - 1]
     try {
       await fetch(`/api/bicis/${bici.id}`, {
         method:  'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ estado: estadoAnterior }),
+        body:    JSON.stringify({ status: ESTADOS[indexEstado + 1] }),
       })
-      await onAvanzar(bici.id) // reusar el callback para recargar y cerrar
+      await onAvanzar()
+    } catch (err) {
+      console.error('Error avanzando estado:', err)
+    } finally {
+      setAvanzando(false)
+    }
+  }
+
+  const handleRetroceder = async () => {
+    setRetrocediendo(true)
+    try {
+      await fetch(`/api/bicis/${bici.id}`, {
+        method:  'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ status: ESTADOS[indexEstado - 1] }),
+      })
+      await onAvanzar()
     } catch (err) {
       console.error('Error retrocediendo estado:', err)
     } finally {
       setRetrocediendo(false)
+    }
+  }
+
+  const handleCerrarServicio = async () => {
+    setCerrandoServicio(true)
+    try {
+      await fetch(`/api/bicis/${bici.id}`, {
+        method:  'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ status: 'entregada', archivarAhora: true }),
+      })
+      await onAvanzar()
+    } catch (err) {
+      console.error('Error cerrando servicio:', err)
+    } finally {
+      setCerrandoServicio(false)
     }
   }
 
@@ -123,10 +149,13 @@ export default function DetalleBici({ bici, onClose, onAvanzar }) {
           <button className={styles.btnCerrar} onClick={onClose}>✕</button>
         </div>
 
-        {/* Bici info */}
+        {/* Bici info + badge de estado */}
         <div className={styles.biciRow}>
           <div className={styles.biciModelo}>{bici.modelo}</div>
           {bici.color && <span className={styles.biciColor}>{bici.color}</span>}
+          <span className={`${styles.estadoBadge} ${styles['estadoBadge_' + bici.estado]}`}>
+            {ESTADOS_LABEL[bici.estado]}
+          </span>
         </div>
 
         {/* Timeline */}
@@ -172,7 +201,6 @@ export default function DetalleBici({ bici, onClose, onAvanzar }) {
             </div>
           </div>
 
-          {/* Botón Reportar - peso visual alto */}
           {bici.estado !== 'entregada' && (
             <button className={styles.btnReportar} onClick={() => setMostrarForm(true)}>
               + Reportar hallazgo
@@ -252,7 +280,13 @@ export default function DetalleBici({ bici, onClose, onAvanzar }) {
           </div>
         )}
 
-        <div className={styles.fecha}>Ingresó el {formatFecha(bici.creadoEn)}</div>
+        {/* Fechas */}
+        <div className={styles.fechas}>
+          <span>Ingresó el {formatFecha(bici.creadoEn)}</span>
+          {bici.deliveredAt && (
+            <span className={styles.fechaEntrega}>Entregada el {formatFecha(bici.deliveredAt)}</span>
+          )}
+        </div>
 
         {/* Footer */}
         {bici.estado !== 'entregada' ? (
@@ -283,6 +317,13 @@ export default function DetalleBici({ bici, onClose, onAvanzar }) {
         ) : (
           <div className={styles.footer}>
             <div className={styles.entregadaMsg}>✓ Bici entregada</div>
+            <button
+              className={styles.btnCerrarServicio}
+              onClick={handleCerrarServicio}
+              disabled={cerrandoServicio}
+            >
+              {cerrandoServicio ? 'Archivando...' : 'Cerrar servicio'}
+            </button>
           </div>
         )}
       </div>

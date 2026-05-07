@@ -62,6 +62,10 @@ function horasAtras(h) {
   return new Date(Date.now() - h * 60 * 60 * 1000)
 }
 
+function diasAtras(d) {
+  return new Date(Date.now() - d * 24 * 60 * 60 * 1000)
+}
+
 function pick(arr) {
   return arr[Math.floor(Math.random() * arr.length)]
 }
@@ -77,7 +81,7 @@ function randomProblemas() {
 
 // ─── Bicis por estado ──────────────────────────────────────────────────────────
 
-async function crearBici({ clienteId, estado, modelo, tipoServicio, creadoEn, hallazgos: halls }) {
+async function crearBici({ clienteId, estado, modelo, tipoServicio, creadoEn, deliveredAt, hallazgos: halls }) {
   const bici = await prisma.bici.create({
     data: {
       modelo:      `${modelo.marca} ${modelo.modelo}`,
@@ -87,6 +91,7 @@ async function crearBici({ clienteId, estado, modelo, tipoServicio, creadoEn, ha
       problemas:   randomProblemas(),
       notas:       Math.random() > 0.6 ? 'Cliente deja hasta el viernes.' : null,
       creadoEn,
+      deliveredAt: deliveredAt || null,
       clienteId,
       tallerId:    TALLER_ID,
     },
@@ -241,7 +246,47 @@ async function main() {
     ],
   })
 
-  console.log('✅ Seed completo — 8 bicis en 4 estados')
+  // ── ENTREGADA HOY (visible en kanban hasta medianoche) ───────────────────────
+  await crearBici({
+    clienteId:    clientesCreados[0].id,
+    estado:       'entregada',
+    modelo:       modelos[3],
+    tipoServicio: 'basico',
+    creadoEn:     horasAtras(100),
+    deliveredAt:  horasAtras(3),
+    hallazgos:    [
+      { ...hallazgosPool[2], estado: 'aprobado' },
+    ],
+  })
+
+  // ── ENTREGADAS AYER Y ANTES (visibles en historial) ──────────────────────────
+  await crearBici({
+    clienteId:    clientesCreados[1].id,
+    estado:       'entregada',
+    modelo:       modelos[5],
+    tipoServicio: 'completo',
+    creadoEn:     diasAtras(5),
+    deliveredAt:  diasAtras(2),
+    hallazgos:    [
+      { ...hallazgosPool[3], estado: 'aprobado'  },
+      { ...hallazgosPool[7], estado: 'rechazado' },
+    ],
+  })
+
+  await crearBici({
+    clienteId:    clientesCreados[2].id,
+    estado:       'entregada',
+    modelo:       modelos[0],
+    tipoServicio: 'premium',
+    creadoEn:     diasAtras(10),
+    deliveredAt:  diasAtras(7),
+    hallazgos:    [
+      { ...hallazgosPool[0], estado: 'aprobado' },
+      { ...hallazgosPool[6], estado: 'aprobado' },
+    ],
+  })
+
+  console.log('✅ Seed completo — 11 bicis (8 activas + 1 entregada hoy + 2 en historial)')
 }
 
 main()
