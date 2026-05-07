@@ -4,9 +4,9 @@ const prisma = new PrismaClient()
 
 const TALLER_ID = 'cmo1pymo80000v58afkeey7so'
 
-// ─── Datos mock ────────────────────────────────────────────────────────────────
+// ─── Pools ────────────────────────────────────────────────────────────────────
 
-const clientes = [
+const CLIENTES_POOL = [
   { nombre: 'Lucía Fernández',   whatsapp: '5491122334455' },
   { nombre: 'Matías Romero',     whatsapp: '5491133445566' },
   { nombre: 'Sofía Gutiérrez',   whatsapp: '5491144556677' },
@@ -15,278 +15,181 @@ const clientes = [
   { nombre: 'Diego Morales',     whatsapp: '5491177889900' },
   { nombre: 'Camila Torres',     whatsapp: '5491188990011' },
   { nombre: 'Facundo Ríos',      whatsapp: '5491199001122' },
+  { nombre: 'Paula Mendez',      whatsapp: '5491211223344' },
+  { nombre: 'Sebastián Cruz',    whatsapp: '5491222334455' },
+  { nombre: 'Marina Aguirre',    whatsapp: '5491233445566' },
+  { nombre: 'Gonzalo Pérez',     whatsapp: '5491244556677' },
+  { nombre: 'Florencia Vidal',   whatsapp: '5491255667788' },
+  { nombre: 'Tomás Herrera',     whatsapp: '5491266778899' },
+  { nombre: 'Cecilia Bravo',     whatsapp: '5491277889900' },
 ]
 
-const modelos = [
-  { marca: 'Trek',        modelo: 'Marlin 5',         color: 'Azul mate'     },
-  { marca: 'Specialized', modelo: 'Rockhopper Comp',  color: 'Negro'         },
-  { marca: 'Giant',       modelo: 'Talon 3',          color: 'Rojo'          },
-  { marca: 'Trek',        modelo: 'FX 3',             color: 'Gris perla'    },
-  { marca: 'Orbea',       modelo: 'MX 50',            color: 'Verde oliva'   },
-  { marca: 'Scott',       modelo: 'Aspect 950',       color: 'Blanco'        },
-  { marca: 'Giant',       modelo: 'Escape 3',         color: 'Azul marino'   },
-  { marca: 'Specialized', modelo: 'Crosstrail Sport', color: 'Naranja'       },
+const MODELOS_POOL = [
+  'Trek Marlin 5', 'Trek FX 3', 'Trek Domane AL 2',
+  'Specialized Rockhopper Comp', 'Specialized Crosstrail Sport',
+  'Giant Talon 3', 'Giant Escape 3', 'Giant Contend AR 3',
+  'Orbea MX 50', 'Orbea Arra 30',
+  'Scott Aspect 950', 'Scott Speedster 30',
+  'Cannondale Trail 7', 'Cannondale Topstone 4',
+  'Merida Big Nine 20',
 ]
 
-const tiposServicio = ['basico', 'completo', 'premium', 'diagnostico']
-
-const problemasPool = [
-  'Frenos no responden bien',
-  'Cambios saltando',
-  'Ruido en el pedalier',
-  'Llanta pinchada',
-  'Manubrio flojo',
-  'Cadena desgastada',
-  'Horquilla con juego',
-  'Sillín roto',
-  'Luz delantera sin funcionar',
-  'Goma trasera gastada',
+const TIPOS_SERVICIO_HISTORIAL = [
+  'Servicio completo',
+  'Frenos',
+  'Transmisión',
+  'Suspensión',
+  'Ruedas',
+  'Limpieza',
 ]
 
-const hallazgosPool = [
-  { descripcion: 'Cable de freno trasero deshilachado',       precio: 3500  },
-  { descripcion: 'Pastillas de freno desgastadas (par)',       precio: 4800  },
-  { descripcion: 'Cadena con estiramiento excesivo',           precio: 6200  },
-  { descripcion: 'Piñón trasero con dientes rotos',            precio: 8500  },
-  { descripcion: 'Rodamiento del pedalier seco',               precio: 5500  },
-  { descripcion: 'Buje trasero con juego lateral',             precio: 9000  },
-  { descripcion: 'Llanta delantera doblada levemente',         precio: 7500  },
-  { descripcion: 'Shifter derecho sin clic definido',          precio: 11000 },
-  { descripcion: 'Tubular trasero con corte pequeño',          precio: 4200  },
-  { descripcion: 'Horquilla con fisura en soldadura inferior', precio: 18000 },
-]
+const TIPOS_SERVICIO_KANBAN = ['basico', 'completo', 'premium', 'diagnostico']
 
-// ─── Helpers ───────────────────────────────────────────────────────────────────
-
-function horasAtras(h) {
-  return new Date(Date.now() - h * 60 * 60 * 1000)
-}
-
-function diasAtras(d) {
-  return new Date(Date.now() - d * 24 * 60 * 60 * 1000)
-}
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function pick(arr) {
   return arr[Math.floor(Math.random() * arr.length)]
 }
 
-function pickN(arr, n) {
-  const shuffled = [...arr].sort(() => 0.5 - Math.random())
-  return shuffled.slice(0, n)
+function entre(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min
 }
 
-function randomProblemas() {
-  return pickN(problemasPool, Math.floor(Math.random() * 2) + 1)
+function fechaEnRango(inicio, fin) {
+  if (fin <= inicio) return new Date(inicio)
+  return new Date(inicio.getTime() + Math.random() * (fin.getTime() - inicio.getTime()))
 }
 
-// ─── Bicis por estado ──────────────────────────────────────────────────────────
+// Rango UTC de un mes. mesesAtras=0 → mes actual (hasta ayer); mesesAtras=1 → mes anterior completo.
+function rangoMes(mesesAtras, hoyMidnightUTC) {
+  const inicio = new Date(hoyMidnightUTC)
+  inicio.setUTCDate(1)
+  inicio.setUTCMonth(inicio.getUTCMonth() - mesesAtras)
 
-async function crearBici({ clienteId, estado, modelo, tipoServicio, creadoEn, deliveredAt, hallazgos: halls }) {
-  const bici = await prisma.bici.create({
-    data: {
-      modelo:      `${modelo.marca} ${modelo.modelo}`,
-      color:       modelo.color,
-      estado,
-      tipoServicio,
-      problemas:   randomProblemas(),
-      notas:       Math.random() > 0.6 ? 'Cliente deja hasta el viernes.' : null,
-      creadoEn,
-      deliveredAt: deliveredAt || null,
-      clienteId,
-      tallerId:    TALLER_ID,
-    },
-  })
-
-  // Historial base
-  await prisma.eventoHistorial.create({
-    data: {
-      tipo:        'ingreso',
-      descripcion: 'Bici ingresada al taller',
-      creadoEn,
-      biciId: bici.id,
-    },
-  })
-
-  // Hallazgos
-  for (const h of halls) {
-    const respondidoEn = h.estado !== 'pendiente'
-      ? new Date(creadoEn.getTime() + 2 * 60 * 60 * 1000)
-      : null
-
-    await prisma.hallazgo.create({
-      data: {
-        descripcion:  h.descripcion,
-        precio:       h.precio,
-        fotoUrl:      'https://placehold.co/400x300/1a1a1a/666?text=foto',
-        estado:       h.estado,
-        creadoEn:     new Date(creadoEn.getTime() + 60 * 60 * 1000),
-        respondidoEn,
-        biciId:       bici.id,
-      },
-    })
+  let fin
+  if (mesesAtras === 0) {
+    fin = new Date(hoyMidnightUTC.getTime() - 1) // 23:59:59.999 de ayer UTC
+  } else {
+    fin = new Date(inicio)
+    fin.setUTCMonth(fin.getUTCMonth() + 1) // primer día del mes siguiente
+    fin.setTime(fin.getTime() - 1)          // último ms del mes
   }
 
-  return bici
+  return { inicio, fin }
 }
 
-// ─── Main ──────────────────────────────────────────────────────────────────────
+// ─── Creadores ────────────────────────────────────────────────────────────────
+
+async function crearServicioCerrado({ clienteId, deliveredAt }) {
+  const diasEnTaller = entre(2, 7)
+  const creadoEn = new Date(deliveredAt.getTime() - diasEnTaller * 24 * 60 * 60 * 1000)
+  return prisma.bici.create({
+    data: {
+      modelo:       pick(MODELOS_POOL),
+      estado:       'entregada',
+      tipoServicio: pick(TIPOS_SERVICIO_HISTORIAL),
+      precio:       entre(30, 120) * 1000,
+      problemas:    [],
+      creadoEn,
+      deliveredAt,
+      clienteId,
+      tallerId: TALLER_ID,
+    },
+  })
+}
+
+async function crearBiciActiva({ clienteId, estado, horasAtras }) {
+  return prisma.bici.create({
+    data: {
+      modelo:       pick(MODELOS_POOL),
+      estado,
+      tipoServicio: pick(TIPOS_SERVICIO_KANBAN),
+      problemas:    [],
+      creadoEn:     new Date(Date.now() - horasAtras * 3600000),
+      clienteId,
+      tallerId: TALLER_ID,
+    },
+  })
+}
+
+// ─── Main ─────────────────────────────────────────────────────────────────────
 
 async function main() {
   console.log('🌱 Iniciando seed...')
 
-  // Limpiar datos previos del taller (en orden por FK)
   await prisma.eventoHistorial.deleteMany({ where: { bici: { tallerId: TALLER_ID } } })
   await prisma.hallazgo.deleteMany({        where: { bici: { tallerId: TALLER_ID } } })
   await prisma.fotoRecepcion.deleteMany({   where: { bici: { tallerId: TALLER_ID } } })
   await prisma.bici.deleteMany({            where: { tallerId: TALLER_ID } })
   await prisma.cliente.deleteMany({         where: { tallerId: TALLER_ID } })
-
   console.log('🗑️  Datos anteriores eliminados')
 
-  // Crear clientes
   const clientesCreados = []
-  for (const c of clientes) {
-    const cliente = await prisma.cliente.create({
-      data: { ...c, tallerId: TALLER_ID },
-    })
+  for (const c of CLIENTES_POOL) {
+    const cliente = await prisma.cliente.create({ data: { ...c, tallerId: TALLER_ID } })
     clientesCreados.push(cliente)
   }
   console.log(`👥 ${clientesCreados.length} clientes creados`)
 
-  // ── INGRESADAS (2 bicis, recientes) ─────────────────────────────────────────
-  await crearBici({
-    clienteId:    clientesCreados[0].id,
-    estado:       'ingresada',
-    modelo:       modelos[0],
-    tipoServicio: 'completo',
-    creadoEn:     horasAtras(2),
-    hallazgos:    [],
-  })
+  // ── Kanban activo ─────────────────────────────────────────────────────────
+  await crearBiciActiva({ clienteId: clientesCreados[0].id, estado: 'ingresada',   horasAtras: 2  })
+  await crearBiciActiva({ clienteId: clientesCreados[1].id, estado: 'ingresada',   horasAtras: 5  })
+  await crearBiciActiva({ clienteId: clientesCreados[2].id, estado: 'diagnostico', horasAtras: 24 })
+  await crearBiciActiva({ clienteId: clientesCreados[3].id, estado: 'diagnostico', horasAtras: 30 })
+  await crearBiciActiva({ clienteId: clientesCreados[4].id, estado: 'reparacion',  horasAtras: 48 })
+  await crearBiciActiva({ clienteId: clientesCreados[5].id, estado: 'reparacion',  horasAtras: 60 })
+  await crearBiciActiva({ clienteId: clientesCreados[6].id, estado: 'lista',       horasAtras: 72 })
+  await crearBiciActiva({ clienteId: clientesCreados[7].id, estado: 'lista',       horasAtras: 96 })
 
-  await crearBici({
-    clienteId:    clientesCreados[1].id,
-    estado:       'ingresada',
-    modelo:       modelos[4],
-    tipoServicio: 'diagnostico',
-    creadoEn:     horasAtras(5),
-    hallazgos:    [],
+  // Entregada hoy (visible en kanban hasta medianoche)
+  await prisma.bici.create({
+    data: {
+      modelo:       pick(MODELOS_POOL),
+      estado:       'entregada',
+      tipoServicio: 'Servicio completo',
+      precio:       entre(30, 120) * 1000,
+      problemas:    [],
+      creadoEn:     new Date(Date.now() - 4 * 24 * 3600000),
+      deliveredAt:  new Date(Date.now() - 3 * 3600000),
+      clienteId:    clientesCreados[8].id,
+      tallerId: TALLER_ID,
+    },
   })
+  console.log('✅ 9 bicis en kanban (8 activas + 1 entregada hoy)')
 
-  // ── DIAGNÓSTICO (2 bicis, con hallazgos pendientes) ──────────────────────────
-  await crearBici({
-    clienteId:    clientesCreados[2].id,
-    estado:       'diagnostico',
-    modelo:       modelos[1],
-    tipoServicio: 'premium',
-    creadoEn:     horasAtras(24),
-    hallazgos:    [
-      { ...hallazgosPool[0], estado: 'pendiente' },
-      { ...hallazgosPool[4], estado: 'pendiente' },
-    ],
-  })
+  // ── Historial: 4 meses ────────────────────────────────────────────────────
+  const hoyMidnightUTC = new Date()
+  hoyMidnightUTC.setUTCHours(0, 0, 0, 0)
 
-  await crearBici({
-    clienteId:    clientesCreados[3].id,
-    estado:       'diagnostico',
-    modelo:       modelos[6],
-    tipoServicio: 'basico',
-    creadoEn:     horasAtras(30),
-    hallazgos:    [
-      { ...hallazgosPool[8], estado: 'pendiente' },
-    ],
-  })
+  let totalCerradas = 0
 
-  // ── REPARACIÓN (2 bicis, hallazgos aprobados y uno rechazado) ────────────────
-  await crearBici({
-    clienteId:    clientesCreados[4].id,
-    estado:       'reparacion',
-    modelo:       modelos[2],
-    tipoServicio: 'completo',
-    creadoEn:     horasAtras(48),
-    hallazgos:    [
-      { ...hallazgosPool[1], estado: 'aprobado'  },
-      { ...hallazgosPool[2], estado: 'aprobado'  },
-      { ...hallazgosPool[9], estado: 'rechazado' },
-    ],
-  })
+  for (let mesesAtras = 0; mesesAtras <= 3; mesesAtras++) {
+    const { inicio, fin } = rangoMes(mesesAtras, hoyMidnightUTC)
 
-  await crearBici({
-    clienteId:    clientesCreados[5].id,
-    estado:       'reparacion',
-    modelo:       modelos[7],
-    tipoServicio: 'premium',
-    creadoEn:     horasAtras(60),
-    hallazgos:    [
-      { ...hallazgosPool[5], estado: 'aprobado' },
-      { ...hallazgosPool[6], estado: 'aprobado' },
-    ],
-  })
+    if (fin <= inicio) {
+      console.log(`  ⚠️  Mes ${mesesAtras} sin rango válido, omitiendo`)
+      continue
+    }
 
-  // ── LISTA (2 bicis, todo resuelto) ───────────────────────────────────────────
-  await crearBici({
-    clienteId:    clientesCreados[6].id,
-    estado:       'lista',
-    modelo:       modelos[3],
-    tipoServicio: 'basico',
-    creadoEn:     horasAtras(72),
-    hallazgos:    [
-      { ...hallazgosPool[3], estado: 'aprobado' },
-    ],
-  })
+    const cantidad = mesesAtras === 0 ? entre(8, 12) : entre(15, 25)
 
-  await crearBici({
-    clienteId:    clientesCreados[7].id,
-    estado:       'lista',
-    modelo:       modelos[5],
-    tipoServicio: 'completo',
-    creadoEn:     horasAtras(96),
-    hallazgos:    [
-      { ...hallazgosPool[7], estado: 'aprobado'  },
-      { ...hallazgosPool[8], estado: 'rechazado' },
-    ],
-  })
+    for (let i = 0; i < cantidad; i++) {
+      const deliveredAt = fechaEnRango(inicio, fin)
+      // Recurrencia: 40% de chances de reusar un cliente de los primeros 8
+      const clienteIdx = Math.random() < 0.4
+        ? entre(0, 7)
+        : entre(0, clientesCreados.length - 1)
+      await crearServicioCerrado({ clienteId: clientesCreados[clienteIdx].id, deliveredAt })
+      totalCerradas++
+    }
 
-  // ── ENTREGADA HOY (visible en kanban hasta medianoche) ───────────────────────
-  await crearBici({
-    clienteId:    clientesCreados[0].id,
-    estado:       'entregada',
-    modelo:       modelos[3],
-    tipoServicio: 'basico',
-    creadoEn:     horasAtras(100),
-    deliveredAt:  horasAtras(3),
-    hallazgos:    [
-      { ...hallazgosPool[2], estado: 'aprobado' },
-    ],
-  })
+    const refDate = new Date(hoyMidnightUTC)
+    refDate.setUTCMonth(refDate.getUTCMonth() - mesesAtras)
+    const mesLabel = refDate.toLocaleDateString('es-AR', { month: 'long', year: 'numeric', timeZone: 'UTC' })
+    console.log(`  📅 ${mesLabel}: ${cantidad} servicios cerrados`)
+  }
 
-  // ── ENTREGADAS AYER Y ANTES (visibles en historial) ──────────────────────────
-  await crearBici({
-    clienteId:    clientesCreados[1].id,
-    estado:       'entregada',
-    modelo:       modelos[5],
-    tipoServicio: 'completo',
-    creadoEn:     diasAtras(5),
-    deliveredAt:  diasAtras(2),
-    hallazgos:    [
-      { ...hallazgosPool[3], estado: 'aprobado'  },
-      { ...hallazgosPool[7], estado: 'rechazado' },
-    ],
-  })
-
-  await crearBici({
-    clienteId:    clientesCreados[2].id,
-    estado:       'entregada',
-    modelo:       modelos[0],
-    tipoServicio: 'premium',
-    creadoEn:     diasAtras(10),
-    deliveredAt:  diasAtras(7),
-    hallazgos:    [
-      { ...hallazgosPool[0], estado: 'aprobado' },
-      { ...hallazgosPool[6], estado: 'aprobado' },
-    ],
-  })
-
-  console.log('✅ Seed completo — 11 bicis (8 activas + 1 entregada hoy + 2 en historial)')
+  console.log(`✅ Seed completo — ${totalCerradas} servicios en historial`)
 }
 
 main()

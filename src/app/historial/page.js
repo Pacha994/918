@@ -1,17 +1,45 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import styles from './historial.module.css'
 
-const PAGE_SIZE = 20
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function formatFechaEntrega(fecha) {
-  if (!fecha) return '—'
+function formatPrecio(precio) {
+  if (precio == null) return null
+  return '$' + new Intl.NumberFormat('es-AR').format(precio)
+}
+
+function formatFechaCorta(fecha) {
+  if (!fecha) return ''
   return new Date(fecha).toLocaleDateString('es-AR', {
-    day: 'numeric', month: 'long', year: 'numeric',
+    day: 'numeric', month: 'short', timeZone: 'UTC',
   })
 }
+
+function claveYMes(fecha) {
+  if (!fecha) return { clave: 'sin-fecha', label: 'Sin fecha' }
+  const d = new Date(fecha)
+  const clave = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`
+  const label = d.toLocaleDateString('es-AR', { month: 'long', year: 'numeric', timeZone: 'UTC' })
+  return { clave, label }
+}
+
+function agruparPorMes(items) {
+  const mapa = new Map()
+  for (const item of items) {
+    const { clave, label } = claveYMes(item.deliveredAt)
+    if (!mapa.has(clave)) mapa.set(clave, { label, items: [] })
+    mapa.get(clave).items.push(item)
+  }
+  // Ordena claves desc (más reciente primero)
+  return Array.from(mapa.entries())
+    .sort((a, b) => b[0].localeCompare(a[0]))
+    .map(([, grupo]) => grupo)
+}
+
+// ─── Iconos ───────────────────────────────────────────────────────────────────
 
 function IconoAtras() {
   return (
@@ -21,62 +49,100 @@ function IconoAtras() {
   )
 }
 
-export default function HistorialPage() {
-  const router = useRouter()
-  const [items,        setItems]        = useState([])
-  const [page,         setPage]         = useState(0)
-  const [cargando,     setCargando]     = useState(true)
-  const [cargandoMas,  setCargandoMas]  = useState(false)
-  const [hayMas,       setHayMas]       = useState(true)
+// ─── Componentes ──────────────────────────────────────────────────────────────
 
-  const cargarPagina = useCallback(async (numeroPagina, acumular) => {
-    if (numeroPagina === 0) setCargando(true)
-    else setCargandoMas(true)
-
-    try {
-      const res = await fetch(`/api/historial?page=${numeroPagina}`)
-      if (!res.ok) throw new Error('Error al cargar historial')
-      const data = await res.json()
-
-      if (acumular) {
-        setItems(prev => [...prev, ...data])
-      } else {
-        setItems(data)
+function MetricCard({ valor, label, loading }) {
+  return (
+    <div className={styles.metricCard}>
+      {loading
+        ? <div className={styles.metricSkeleton} />
+        : <div className={styles.metricValor}>{valor ?? '—'}</div>
       }
+      <div className={styles.metricLabel}>{label}</div>
+    </div>
+  )
+}
 
-      setHayMas(data.length === PAGE_SIZE)
-    } catch (err) {
-      console.error(err)
-    } finally {
-      setCargando(false)
-      setCargandoMas(false)
+function SkeletonItems({ n = 5 }) {
+  return Array.from({ length: n }).map((_, i) => (
+    <div key={i} className={styles.skeletonItem} />
+  ))
+}
+
+// ─── Página ───────────────────────────────────────────────────────────────────
+
+export default function HistorialPage() {
+  const router  = useRouter()
+  const [items,   setItems]   = useState([])
+  const [resumen, setResumen] = useState(null)
+  const [cargando, setCargando] = useState(true)
+
+  useEffect(() => {
+    async function cargar() {
+      try {
+        const [resItems, resResumen] = await Promise.all([
+          fetch('/api/historial'),
+          fetch('/api/historial/resumen'),
+        ])
+        const [dataItems, dataResumen] = await Promise.all([
+          resItems.json(),
+          resResumen.json(),
+        ])
+        setItems(Array.isArray(dataItems) ? dataItems : [])
+        setResumen(dataResumen)
+      } catch (err) {
+        console.error(err)
+      } finally {
+        setCargando(false)
+      }
     }
+    cargar()
   }, [])
 
-  useEffect(() => { cargarPagina(0, false) }, [cargarPagina])
+  const grupos = agruparPorMes(items)
 
-  const handleCargarMas = async () => {
-    const siguiente = page + 1
-    setPage(siguiente)
-    await cargarPagina(siguiente, true)
-  }
+  const mesActual = new Date().toLocaleDateString('es-AR', {
+    month: 'long', year: 'numeric',
+  })
 
   return (
     <div className={styles.page}>
 
+      {/* Header */}
       <div className={styles.header}>
-        <button className={styles.btnAtras} onClick={() => router.push('/kanban')} aria-label="Volver al kanban">
+        <button className={styles.btnAtras} onClick={() => router.push('/kanban')} aria-label="Volver">
           <IconoAtras />
         </button>
         <span className={styles.titulo}>Historial</span>
         <span className={styles.headerSpacer} />
       </div>
 
+      {/* Métricas del mes actual */}
+      <div className={styles.seccionMetricas}>
+        <div className={styles.seccionMesLabel}>Este mes · {mesActual}</div>
+        <div className={styles.metricsGrid}>
+          <MetricCard
+            valor={resumen ? String(resumen.count) : null}
+            label="servicios"
+            loading={cargando}
+          />
+          <MetricCard
+            valor={resumen ? `${resumen.avgDias}d` : null}
+            label="prom. en taller"
+            loading={cargando}
+          />
+          <MetricCard
+            valor={resumen ? formatPrecio(resumen.revenue) : null}
+            label="revenue"
+            loading={cargando}
+          />
+        </div>
+      </div>
+
+      {/* Lista */}
       {cargando && (
-        <div className={styles.skeletonList}>
-          {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className={styles.skeletonItem} />
-          ))}
+        <div className={styles.lista}>
+          <SkeletonItems n={6} />
         </div>
       )}
 
@@ -88,39 +154,39 @@ export default function HistorialPage() {
         </div>
       )}
 
-      {!cargando && items.length > 0 && (
-        <>
-          <div className={styles.lista}>
-            {items.map(item => (
-              <div key={item.id} className={styles.item}>
-                <div className={styles.itemTop}>
-                  <div className={styles.itemCliente}>{item.cliente?.nombre || '—'}</div>
-                  <span className={styles.badgeEntregada}>Entregada</span>
-                </div>
-                <div className={styles.itemModelo}>{item.modelo}</div>
-                <div className={styles.itemFecha}>
-                  {formatFechaEntrega(item.deliveredAt)}
-                </div>
+      {!cargando && grupos.length > 0 && (
+        <div className={styles.lista}>
+          {grupos.map(grupo => (
+            <div key={grupo.label} className={styles.mesGrupo}>
+              <div className={styles.mesHeader}>
+                <span className={styles.mesLabel}>{grupo.label}</span>
+                <span className={styles.mesCount}>{grupo.items.length}</span>
               </div>
-            ))}
-          </div>
-
-          {hayMas && (
-            <div className={styles.cargarMasWrap}>
-              <button
-                className={styles.btnCargarMas}
-                onClick={handleCargarMas}
-                disabled={cargandoMas}
-              >
-                {cargandoMas ? 'Cargando...' : 'Cargar más'}
-              </button>
+              {grupo.items.map(item => (
+                <div key={item.id} className={styles.item}>
+                  <div className={styles.itemTop}>
+                    <span className={styles.itemCliente}>{item.cliente?.nombre || '—'}</span>
+                    <span className={styles.itemFecha}>{formatFechaCorta(item.deliveredAt)}</span>
+                  </div>
+                  <div className={styles.itemModelo}>{item.modelo}</div>
+                  {(item.tipoServicio || item.precio != null) && (
+                    <div className={styles.itemMeta}>
+                      {item.tipoServicio && (
+                        <span className={styles.itemTipo}>{item.tipoServicio}</span>
+                      )}
+                      {item.tipoServicio && item.precio != null && (
+                        <span className={styles.itemMetaSep}>·</span>
+                      )}
+                      {item.precio != null && (
+                        <span className={styles.itemPrecio}>{formatPrecio(item.precio)}</span>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
-          )}
-
-          {!hayMas && items.length > 0 && (
-            <div className={styles.finLista}>Todos los servicios cargados</div>
-          )}
-        </>
+          ))}
+        </div>
       )}
 
     </div>

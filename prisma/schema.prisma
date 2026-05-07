@@ -39,6 +39,7 @@ model Bici {
   tipoServicio String?
   problemas    String[]
   notas        String?
+  precio       Int?
   creadoEn     DateTime   @default(now())
   deliveredAt  DateTime?
   clienteId    String
