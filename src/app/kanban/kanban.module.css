@@ -217,6 +217,19 @@
   pointer-events: none;
 }
 
+.cardDragging {
+  opacity: 0.35;
+  transform: scale(0.97);
+  pointer-events: none;
+}
+
+.colCardsDropTarget {
+  background: rgba(255, 96, 26, 0.05);
+  border-radius: var(--r-card);
+  outline: 1px dashed rgba(255, 96, 26, 0.4);
+  outline-offset: -2px;
+}
+
 /* ── SKELETONS ── */
 @keyframes shimmer {
   0%   { background-position: -400px 0; }
