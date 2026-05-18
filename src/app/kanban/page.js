@@ -83,6 +83,12 @@ export default function KanbanPage() {
     setBiciDetalle(null)
   }
 
+  const handleHallazgoCreado = useCallback((biciId, hallazgo) => {
+    setBicis(prev => prev.map(b =>
+      b.id === biciId ? { ...b, hallazgos: [...(b.hallazgos || []), hallazgo] } : b
+    ))
+  }, [])
+
   const handleAvanzar = async (biciId, estadoActual) => {
     const orden = ['ingresada', 'diagnostico', 'reparacion', 'lista', 'entregada']
     const idx   = orden.indexOf(estadoActual)
@@ -221,6 +227,7 @@ export default function KanbanPage() {
           bici={biciDetalle}
           onClose={handleCerrarDetalle}
           onAvanzar={handleAvanzarDesdeSheet}
+          onHallazgoCreado={handleHallazgoCreado}
         />
       )}
 

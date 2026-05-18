@@ -34,7 +34,7 @@ const TIPO_SERVICIO_LABEL = {
   diagnostico: 'Solo diagnóstico',
 }
 
-export default function DetalleBici({ bici, onClose, onAvanzar }) {
+export default function DetalleBici({ bici, onClose, onAvanzar, onHallazgoCreado }) {
   const [avanzando,       setAvanzando]       = useState(false)
   const [retrocediendo,   setRetrocediendo]   = useState(false)
   const [cerrandoServicio, setCerrandoServicio] = useState(false)
@@ -97,6 +97,7 @@ export default function DetalleBici({ bici, onClose, onAvanzar }) {
 
   const handleHallazgoCreado = (hallazgo) => {
     setHallazgos(prev => [...prev, hallazgo])
+    onHallazgoCreado?.(bici.id, hallazgo)
   }
 
   const handleResolver = async (hallazgoId, estado) => {
