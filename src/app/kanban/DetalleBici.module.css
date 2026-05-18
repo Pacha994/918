@@ -151,7 +151,17 @@
   cursor:pointer; font-weight:600; transition:background .12s;
 }
 .btnAvanzar:hover    { background:#e5551a; }
-.btnAvanzar:disabled { opacity:.5; cursor:not-allowed; }
+.btnAvanzar:disabled { opacity:.35; cursor:not-allowed; background:var(--bg4); color:var(--t3); border:1px solid var(--b3); }
+
+.avanzarBloqueado {
+  font-size: 13px;
+  color: var(--ye);
+  background: var(--ye1);
+  border: 1px solid rgba(212, 160, 23, .25);
+  border-radius: var(--r-input);
+  padding: 8px 12px;
+  text-align: center;
+}
 
 .btnRetroceder {
   font-family: var(--f);

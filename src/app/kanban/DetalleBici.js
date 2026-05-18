@@ -302,9 +302,14 @@ export default function DetalleBici({ bici, onClose, onAvanzar, onHallazgoCreado
               </button>
             )}
             {hayPendiente ? (
-              <button className={styles.btnAvanzar} disabled>
-                {ESTADO_SIGUIENTE_LABEL[bici.estado]} · presupuesto pendiente
-              </button>
+              <>
+                <div className={styles.avanzarBloqueado}>
+                  Hay un presupuesto esperando respuesta del cliente
+                </div>
+                <button className={styles.btnAvanzar} disabled>
+                  {ESTADO_SIGUIENTE_LABEL[bici.estado]}
+                </button>
+              </>
             ) : (
               <button
                 className={styles.btnAvanzar}
