@@ -29,21 +29,11 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Faltan campos requeridos' }, { status: 400 })
     }
 
-    const existente = await prisma.taller.findUnique({
-      where: { whatsapp },
+    const taller = await prisma.taller.upsert({
+      where:  { id: TALLER_ID },
+      update: { nombre, whatsapp, servicios: sanitizarServicios(servicios || []) },
+      create: { id: TALLER_ID, nombre, whatsapp, servicios: sanitizarServicios(servicios || []) },
     })
-
-    let taller
-    if (existente) {
-      taller = await prisma.taller.update({
-        where: { whatsapp },
-        data: { nombre, servicios: sanitizarServicios(servicios || []) },
-      })
-    } else {
-      taller = await prisma.taller.create({
-        data: { nombre, whatsapp, servicios: sanitizarServicios(servicios || []) },
-      })
-    }
 
     return NextResponse.json(taller, { status: 201 })
   } catch (error) {
