@@ -1,0 +1,275 @@
+/* ── OVERLAY ── */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.6);
+  z-index: 100;
+  animation: fadeIn .15s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ── SHEET ── */
+.sheet {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--bg2);
+  border-radius: 12px 12px 0 0;
+  z-index: 101;
+  max-height: 90dvh;
+  overflow-y: auto;
+  animation: slideUp .2s ease;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+@keyframes slideUp {
+  from { transform: translateY(30px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+.handle {
+  width: 36px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--b3);
+  margin: 12px auto 4px;
+  cursor: pointer;
+}
+
+/* ── LOADING ── */
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  color: var(--t4);
+  font-size: 14px;
+}
+
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--b3);
+  border-top-color: var(--or);
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── HEADER ── */
+.sheetHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 12px 16px 12px;
+  border-bottom: 1px solid var(--b1);
+}
+
+.clienteNombre {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--t1);
+  line-height: 1.2;
+}
+
+.whatsapp {
+  font-size: 13px;
+  color: var(--bl);
+  margin-top: 3px;
+  display: block;
+}
+
+.btnCerrar {
+  font-size: 16px;
+  color: var(--t4);
+  padding: 4px 8px;
+  border-radius: var(--r-input);
+  transition: color .1s;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.btnCerrar:hover { color: var(--t1); }
+
+/* ── BICI ROW ── */
+.biciRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px 10px;
+  border-bottom: 1px solid var(--b1);
+}
+
+.biciModelo {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--t2);
+}
+
+.biciColor {
+  font-size: 12px;
+  color: var(--t4);
+  background: var(--bg4);
+  border: 1px solid var(--b2);
+  border-radius: 2px;
+  padding: 2px 7px;
+}
+
+/* ── SECCIÓN ── */
+.seccion {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--b1);
+}
+.seccion:last-child { border-bottom: none; }
+
+.seccionLabel {
+  font-size: 11px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--t4);
+  margin-bottom: 8px;
+}
+
+/* ── SERVICIO ── */
+.servicioRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.servicioTipo  { font-size: 14px; color: var(--t2); }
+
+.servicioPrecio {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--or);
+}
+
+/* ── FECHAS ── */
+.fechasFila {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fechaItem {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.fechaKey {
+  font-size: 12px;
+  color: var(--t4);
+  width: 72px;
+  flex-shrink: 0;
+}
+
+.fechaVal  { font-size: 14px; color: var(--t2); }
+.duracion  { font-size: 12px; color: var(--t4); }
+
+/* ── NOTAS ── */
+.descripcion {
+  font-size: 14px;
+  color: var(--t2);
+  line-height: 1.5;
+}
+
+/* ── HALLAZGOS ── */
+.hallazgosList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.hallazgoItem {
+  background: var(--bg3);
+  border: 1px solid var(--b2);
+  border-radius: var(--r-card);
+  padding: 10px;
+}
+
+.hallazgo_aprobado  { border-color: rgba(30,200,100,.25); }
+.hallazgo_rechazado { opacity: .6; }
+
+.hallazgoTop {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.hallazgoFoto {
+  width: 52px;
+  height: 52px;
+  object-fit: cover;
+  border-radius: var(--r-card);
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.hallazgoInfo { flex: 1; min-width: 0; }
+
+.hallazgoDesc {
+  font-size: 13px;
+  color: var(--t2);
+  line-height: 1.4;
+}
+
+.hallazgoPrecio {
+  font-size: 12px;
+  color: var(--or);
+  font-weight: 500;
+  margin-top: 3px;
+}
+
+.hallazgoBadge {
+  font-size: 11px;
+  padding: 2px 7px;
+  border-radius: 2px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.badge_pendiente  { background: var(--ye1); color: var(--ye); }
+.badge_aprobado   { background: var(--gr1); color: var(--gr); }
+.badge_rechazado  { background: var(--re1); color: var(--re); }
+
+/* ── FOTOS ── */
+.fotosGrid {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.foto {
+  width: 72px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: var(--r-card);
+  cursor: pointer;
+}
+
+/* ── LIGHTBOX ── */
+.lightbox {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.92);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  cursor: pointer;
+}
+
+.lightboxImg {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: var(--r-card);
+}

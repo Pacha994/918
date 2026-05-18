@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import styles from './historial.module.css'
+import DetalleServicio from './DetalleServicio'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -88,10 +89,11 @@ function SkeletonItems({ n = 5 }) {
 
 export default function HistorialPage() {
   const router   = useRouter()
-  const [items,    setItems]    = useState([])
-  const [resumen,  setResumen]  = useState(null)
-  const [cargando, setCargando] = useState(true)
+  const [items,       setItems]       = useState([])
+  const [resumen,     setResumen]     = useState(null)
+  const [cargando,    setCargando]    = useState(true)
   const [tooltipActivo, setTooltipActivo] = useState(null)
+  const [itemDetalle, setItemDetalle] = useState(null)
 
   useEffect(() => {
     async function cargar() {
@@ -195,30 +197,44 @@ export default function HistorialPage() {
                 <span className={styles.mesCount}>{grupo.items.length}</span>
               </div>
               {grupo.items.map((item, ii) => (
-                <div key={item.id} className={`${styles.item} ${ii === 0 ? styles.itemFirst : ''}`}>
-                  <div className={styles.itemTop}>
-                    <span className={styles.itemCliente}>{item.cliente?.nombre || '—'}</span>
-                    <span className={styles.itemFecha}>{formatFechaCorta(item.deliveredAt)}</span>
-                  </div>
-                  <div className={styles.itemModelo}>{item.modelo}</div>
-                  {(item.tipoServicio || item.precio != null) && (
-                    <div className={styles.itemMeta}>
-                      {item.tipoServicio && (
-                        <span className={styles.itemTipo}>{item.tipoServicio}</span>
-                      )}
-                      {item.tipoServicio && item.precio != null && (
-                        <span className={styles.itemMetaSep}>·</span>
-                      )}
-                      {item.precio != null && (
-                        <span className={styles.itemPrecio}>{formatPrecio(item.precio)}</span>
-                      )}
+                <button
+                  key={item.id}
+                  className={`${styles.item} ${ii === 0 ? styles.itemFirst : ''}`}
+                  onClick={() => setItemDetalle(item.id)}
+                >
+                  <div className={styles.itemContent}>
+                    <div className={styles.itemTop}>
+                      <span className={styles.itemCliente}>{item.cliente?.nombre || '—'}</span>
+                      <span className={styles.itemFecha}>{formatFechaCorta(item.deliveredAt)}</span>
                     </div>
-                  )}
-                </div>
+                    <div className={styles.itemModelo}>{item.modelo}</div>
+                    {(item.tipoServicio || item.precio != null) && (
+                      <div className={styles.itemMeta}>
+                        {item.tipoServicio && (
+                          <span className={styles.itemTipo}>{item.tipoServicio}</span>
+                        )}
+                        {item.tipoServicio && item.precio != null && (
+                          <span className={styles.itemMetaSep}>·</span>
+                        )}
+                        {item.precio != null && (
+                          <span className={styles.itemPrecio}>{formatPrecio(item.precio)}</span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  <span className={styles.itemChevron}>›</span>
+                </button>
               ))}
             </div>
           ))}
         </div>
+      )}
+
+      {itemDetalle && (
+        <DetalleServicio
+          itemId={itemDetalle}
+          onClose={() => setItemDetalle(null)}
+        />
       )}
 
     </div>
