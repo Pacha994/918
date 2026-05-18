@@ -95,7 +95,8 @@ export default function OnboardingPage() {
 
   const handlePrecioChange = (idx, val) => {
     const nuevo = [...servicios]
-    nuevo[idx] = { ...nuevo[idx], precio: Math.max(0, Number(val) || 0) }
+    const n = Number(val)
+    nuevo[idx] = { ...nuevo[idx], precio: !val ? '' : isNaN(n) ? nuevo[idx].precio : Math.abs(n) }
     setServicios(nuevo)
   }
 

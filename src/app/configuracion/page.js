@@ -89,7 +89,8 @@ export default function ConfiguracionPage() {
   // ── Servicios helpers ──
   const handlePrecioChange = (idx, val) => {
     const nuevo = [...servicios]
-    nuevo[idx] = { ...nuevo[idx], precio: Number(val) < 0 ? '0' : val }
+    const n = Number(val)
+    nuevo[idx] = { ...nuevo[idx], precio: !val ? '' : isNaN(n) ? nuevo[idx].precio : Math.abs(n) }
     setServicios(nuevo)
   }
 

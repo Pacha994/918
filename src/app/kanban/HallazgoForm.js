@@ -118,7 +118,8 @@ export default function HallazgoForm({ bici, onClose, onHallazgoCreado }) {
                 value={precio}
                 onChange={e => {
                   const v = e.target.value
-                  setPrecio(Number(v) < 0 ? '0' : v)
+                  const n = Number(v)
+                  setPrecio(!v ? '' : isNaN(n) ? precio : String(Math.abs(n)))
                 }}
                 min="0"
               />
