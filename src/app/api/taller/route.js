@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { TALLER_ID } from '@/lib/config'
 
+const sanitizarServicios = (arr) =>
+  arr.map(s => ({ ...s, precio: Math.max(0, Number(s.precio) || 0) }))
+
 export async function GET() {
   try {
     const taller = await prisma.taller.findUnique({
@@ -34,11 +37,11 @@ export async function POST(request) {
     if (existente) {
       taller = await prisma.taller.update({
         where: { whatsapp },
-        data: { nombre, servicios: servicios || [] },
+        data: { nombre, servicios: sanitizarServicios(servicios || []) },
       })
     } else {
       taller = await prisma.taller.create({
-        data: { nombre, whatsapp, servicios: servicios || [] },
+        data: { nombre, whatsapp, servicios: sanitizarServicios(servicios || []) },
       })
     }
 
@@ -56,7 +59,7 @@ export async function PATCH(request) {
 
     const data = {}
     if (nombre !== undefined) data.nombre = nombre.trim()
-    if (servicios !== undefined) data.servicios = servicios
+    if (servicios !== undefined) data.servicios = sanitizarServicios(servicios)
 
     if (Object.keys(data).length === 0) {
       return NextResponse.json({ error: 'Nada que actualizar' }, { status: 400 })

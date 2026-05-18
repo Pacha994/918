@@ -1,1 +1,2 @@
 @AGENTS.md
+@918-CLAUDE.md

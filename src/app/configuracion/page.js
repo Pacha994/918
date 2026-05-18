@@ -89,7 +89,7 @@ export default function ConfiguracionPage() {
   // ── Servicios helpers ──
   const handlePrecioChange = (idx, val) => {
     const nuevo = [...servicios]
-    nuevo[idx] = { ...nuevo[idx], precio: val }
+    nuevo[idx] = { ...nuevo[idx], precio: Number(val) < 0 ? '0' : val }
     setServicios(nuevo)
   }
 
@@ -244,6 +244,7 @@ export default function ConfiguracionPage() {
                         className={styles.precioInput}
                         type="number"
                         inputMode="numeric"
+                        min="0"
                         value={srv.precio ?? ''}
                         onChange={e => handlePrecioChange(sIdx, e.target.value)}
                       />

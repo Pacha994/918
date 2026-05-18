@@ -116,7 +116,10 @@ export default function HallazgoForm({ bici, onClose, onHallazgoCreado }) {
                 inputMode="numeric"
                 placeholder="0"
                 value={precio}
-                onChange={e => setPrecio(e.target.value)}
+                onChange={e => {
+                  const v = e.target.value
+                  setPrecio(Number(v) < 0 ? '0' : v)
+                }}
                 min="0"
               />
             </div>

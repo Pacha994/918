@@ -7,7 +7,7 @@ export async function POST(request) {
     const body = await request.json()
     const { biciId, descripcion, precio, fotoUrl } = body
 
-    if (!biciId || !descripcion || precio == null) {
+    if (!biciId || !descripcion || precio == null || Number(precio) < 0) {
       return NextResponse.json({ error: 'Faltan campos requeridos' }, { status: 400 })
     }
 

@@ -95,7 +95,7 @@ export default function OnboardingPage() {
 
   const handlePrecioChange = (idx, val) => {
     const nuevo = [...servicios]
-    nuevo[idx] = { ...nuevo[idx], precio: Number(val) || 0 }
+    nuevo[idx] = { ...nuevo[idx], precio: Math.max(0, Number(val) || 0) }
     setServicios(nuevo)
   }
 
@@ -267,6 +267,7 @@ export default function OnboardingPage() {
                   className={styles.precioInput}
                   type="number"
                   inputMode="numeric"
+                  min="0"
                   value={servicios[servicioIdx].precio}
                   onChange={e => handlePrecioChange(servicioIdx, e.target.value)}
                 />
