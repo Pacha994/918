@@ -209,6 +209,11 @@
 
 .cardWrapper {
   transition: opacity 0.25s cubic-bezier(.4,0,.2,1), transform 0.25s cubic-bezier(.4,0,.2,1);
+  cursor: grab;
+}
+
+.cardWrapper:active {
+  cursor: grabbing;
 }
 
 .cardSaliendo {

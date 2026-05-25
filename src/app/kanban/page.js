@@ -130,6 +130,13 @@ export default function KanbanPage() {
     e.preventDefault()
     e.dataTransfer.dropEffect = 'move'
     setDropCol(colId)
+    const kb = kanbanRef.current
+    if (kb) {
+      const r = kb.getBoundingClientRect()
+      const ZONE = 80
+      if      (e.clientX < r.left  + ZONE) kb.scrollLeft -= 10
+      else if (e.clientX > r.right - ZONE) kb.scrollLeft += 10
+    }
   }, [])
 
   const handleDragLeave = useCallback((e) => {
