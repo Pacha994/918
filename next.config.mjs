@@ -1,4 +1,6 @@
-const withSerwist = require('@serwist/next').default({
+import withSerwist from '@serwist/next';
+
+const serwist = withSerwist({
   swSrc: 'src/sw.js',
   swDest: 'public/sw.js',
   disable: process.env.NODE_ENV === 'development',
@@ -8,4 +10,5 @@ const nextConfig = {
   turbopack: {},
 };
 
-module.exports = withSerwist(nextConfig);
+export default serwist(nextConfig);
+
