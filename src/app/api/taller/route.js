@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { TALLER_ID } from '@/lib/config'
 import { getTallerId } from '@/lib/auth'
 
 const sanitizarServicios = (arr) =>
@@ -24,13 +23,14 @@ export async function GET() {
   }
 }
 
-// POST no se toca en este cambio: es el endpoint de onboarding, se llama
-// ANTES de que exista sesión (ver onboarding/page.js - crea el taller acá
-// y recién después llama POST /api/auth/login). Exigir sesión acá rompería
-// el onboarding por completo. Sigue con TALLER_ID hardcoded a propósito -
-// upsertear contra un id fijo en vez de crear un taller nuevo de verdad es
-// un bug real y distinto (todo onboarding nuevo pisa el mismo registro),
-// pero no es parte de este cambio - queda para revisar aparte.
+// POST es el endpoint de onboarding: se llama ANTES de que exista sesión
+// (ver onboarding/page.js - crea el taller acá y recién después llama
+// POST /api/auth/login), así que no puede exigir getTallerId(). El upsert
+// busca por whatsapp (@unique en el schema, es el dato real que identifica
+// a un taller en el form de onboarding) en vez de por un id fijo - así cada
+// whatsapp nuevo crea un taller separado con id generado por Prisma, y
+// reenviar el form con el mismo whatsapp actualiza ese taller en vez de
+// pisar el de otro.
 export async function POST(request) {
   try {
     const body = await request.json()
@@ -41,9 +41,9 @@ export async function POST(request) {
     }
 
     const taller = await prisma.taller.upsert({
-      where:  { id: TALLER_ID },
-      update: { nombre, whatsapp, servicios: sanitizarServicios(servicios || []) },
-      create: { id: TALLER_ID, nombre, whatsapp, servicios: sanitizarServicios(servicios || []) },
+      where:  { whatsapp },
+      update: { nombre, servicios: sanitizarServicios(servicios || []) },
+      create: { nombre, whatsapp, servicios: sanitizarServicios(servicios || []) },
     })
 
     return NextResponse.json(taller, { status: 201 })
