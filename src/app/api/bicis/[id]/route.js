@@ -1,16 +1,29 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { getTallerId } from '@/lib/auth'
 
 const ESTADOS_VALIDOS = ['ingresada', 'diagnostico', 'reparacion', 'lista', 'entregada']
 
 export async function PATCH(request, { params }) {
   try {
+    const tallerId = await getTallerId()
+    if (!tallerId) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+
     const { id } = await params
     const body = await request.json().catch(() => ({}))
     const { status, archivarAhora } = body
 
     if (!status || !ESTADOS_VALIDOS.includes(status)) {
       return NextResponse.json({ error: 'Status inválido' }, { status: 400 })
+    }
+
+    // Prisma.update no soporta un where compuesto por id + tallerId (id ya es
+    // la unique key), asi que la pertenencia se verifica aparte antes de
+    // mutar. 404 en vez de 403 - no confirmarle a otro taller que el id
+    // existe pero es ajeno.
+    const propia = await prisma.bici.findFirst({ where: { id, tallerId }, select: { id: true } })
+    if (!propia) {
+      return NextResponse.json({ error: 'Bici no encontrada' }, { status: 404 })
     }
 
     const data = { estado: status }
@@ -44,9 +57,12 @@ export async function PATCH(request, { params }) {
 
 export async function GET(request, { params }) {
   try {
+    const tallerId = await getTallerId()
+    if (!tallerId) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+
     const { id } = await params
-    const bici = await prisma.bici.findUnique({
-      where: { id },
+    const bici = await prisma.bici.findFirst({
+      where: { id, tallerId },
       include: { cliente: true, fotos: true, hallazgos: true }
     })
 
