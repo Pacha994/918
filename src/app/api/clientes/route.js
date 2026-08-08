@@ -1,9 +1,12 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { TALLER_ID } from '@/lib/config'
+import { getTallerId } from '@/lib/auth'
 
 export async function GET(request) {
   try {
+    const tallerId = await getTallerId()
+    if (!tallerId) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+
     const wa = request.nextUrl.searchParams.get('whatsapp')?.trim()
     if (!wa) return NextResponse.json(null, { status: 400 })
 
@@ -11,7 +14,7 @@ export async function GET(request) {
     const candidatos = [wa, `54${wa}`, wa.replace(/^54/, '')]
 
     const cliente = await prisma.cliente.findFirst({
-      where: { tallerId: TALLER_ID, whatsapp: { in: candidatos } },
+      where: { tallerId, whatsapp: { in: candidatos } },
     })
 
     return NextResponse.json(cliente)

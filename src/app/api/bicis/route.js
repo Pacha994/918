@@ -1,16 +1,19 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { TALLER_ID } from '@/lib/config'
+import { getTallerId } from '@/lib/auth'
 
 export async function GET() {
   try {
+    const tallerId = await getTallerId()
+    if (!tallerId) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+
     const hoyUTC = new Date()
     hoyUTC.setUTCHours(0, 0, 0, 0)
     console.log('GET /api/bicis hoyUTC:', hoyUTC.toISOString())
 
     const bicis = await prisma.bici.findMany({
       where: {
-        tallerId: TALLER_ID,
+        tallerId,
         OR: [
           { estado: { not: 'entregada' } },
           { estado: 'entregada', deliveredAt: { gte: hoyUTC } },
@@ -33,6 +36,9 @@ export async function GET() {
 
 export async function POST(request) {
   try {
+    const tallerId = await getTallerId()
+    if (!tallerId) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+
     const body = await request.json()
     const { cliente, bici, fotos } = body
 
@@ -44,7 +50,7 @@ export async function POST(request) {
     const candidatos = [wa, `54${wa}`, wa.replace(/^54/, '')]
 
     let clienteRecord = await prisma.cliente.findFirst({
-      where: { tallerId: TALLER_ID, whatsapp: { in: candidatos } }
+      where: { tallerId, whatsapp: { in: candidatos } }
     })
 
     if (!clienteRecord) {
@@ -52,7 +58,7 @@ export async function POST(request) {
         data: {
           nombre:   cliente.nombre,
           whatsapp: wa,
-          tallerId: TALLER_ID,
+          tallerId,
         }
       })
     }
@@ -66,7 +72,7 @@ export async function POST(request) {
         problemas:    bici.problemas   || [],
         estado:       'ingresada',
         clienteId:    clienteRecord.id,
-        tallerId:     TALLER_ID,
+        tallerId,
         fotos: fotos && fotos.length > 0
           ? { create: fotos.map(f => ({ url: f.url, angulo: f.angulo || 'general' })) }
           : undefined

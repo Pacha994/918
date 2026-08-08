@@ -1,12 +1,15 @@
 import { NextResponse } from 'next/server'
 import { prisma }       from '@/lib/prisma'
-import { TALLER_ID }    from '@/lib/config'
+import { getTallerId }  from '@/lib/auth'
 
 export async function GET(request, { params }) {
   try {
+    const tallerId = await getTallerId()
+    if (!tallerId) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+
     const { id } = await params
     const bici = await prisma.bici.findFirst({
-      where: { id, tallerId: TALLER_ID, estado: 'entregada' },
+      where: { id, tallerId, estado: 'entregada' },
       select: {
         id:           true,
         modelo:       true,

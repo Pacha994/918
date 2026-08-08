@@ -1,15 +1,18 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { TALLER_ID } from '@/lib/config'
+import { getTallerId } from '@/lib/auth'
 
 export async function GET() {
   try {
+    const tallerId = await getTallerId()
+    if (!tallerId) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+
     const hoyUTC = new Date()
     hoyUTC.setUTCHours(0, 0, 0, 0)
 
     const bicis = await prisma.bici.findMany({
       where: {
-        tallerId: TALLER_ID,
+        tallerId,
         estado: 'entregada',
         OR: [
           { deliveredAt: { lt: hoyUTC } },
