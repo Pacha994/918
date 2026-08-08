@@ -4,17 +4,18 @@
 >
 > **Nota para Loco**: este archivo está más liviano que el de 918TAG porque el repo está menos avanzado y hay menos sesiones de debug acumuladas. Va a crecer rápido cuando arrancamos PATCH y F1.2.
 
-## Auth ausente hasta F4.3
+## Sesión existe, pero las rutas de API no la leen
 
 ### `tallerId` hardcoded en rutas actuales
 
-Hoy todas las rutas que necesitan `tallerId` lo toman de un valor fijo. **`[VERIFICAR ubicación]`** (probablemente `src/lib/constants.js`, o inline en cada handler).
+Hay login real (`/login` busca el `Taller` por WhatsApp), sesión real (cookie `918_session`) y `src/middleware.js` gateando rutas privadas. Lo que falta es conectar esa sesión con los datos: todas las rutas que necesitan `tallerId` lo toman de la constante `TALLER_ID` en **`src/lib/config.js`**, no de la cookie.
 
 **Riesgos:**
 - Si seedeás un taller nuevo y borrás el viejo, todas las rutas rompen porque apuntan al ID viejo.
-- Cuando llegue F4.3, hay que hacer search & replace global para sacar el hardcoding.
+- Multi-taller no funciona todavía: dos talleres logueados en simultáneo leen y escriben sobre el mismo `tallerId` hardcoded, sin importar cuál inició sesión.
+- Cuando se conecte la sesión, hay que tocar cada handler que importa `TALLER_ID` (`bicis`, `clientes`, `historial`, `taller` — 6 archivos en total) para que lea el `tallerId` de la cookie en su lugar.
 
-**Workaround temporal:** dejar siempre el mismo taller seedeado en la DB, no borrarlo aunque hagas otros experimentos. Si necesitás cambiarlo, actualizá la constante en un solo lugar y verificá que todos los handlers la importan de ahí (no que la repitan inline).
+**Workaround temporal:** dejar siempre el mismo taller seedeado en la DB, no borrarlo aunque hagas otros experimentos. Si necesitás cambiarlo, actualizá la constante en `src/lib/config.js` y verificá que todos los handlers la importan de ahí (no que la repitan inline).
 
 ## PWA
 
@@ -28,7 +29,7 @@ Si pusheás cambios y en mobile no aparecen, casi seguro es el SW cacheando.
 
 **Fix manual:**
 1. En el celular, borrar el SW desde DevTools remotos (`chrome://inspect` desde Chrome desktop con cable USB).
-2. O bumpear la versión del SW en `public/sw.js` (cualquier comentario que cambie el hash del archivo sirve para forzar update en clientes existentes).
+2. O bumpear la versión del SW en **`src/sw.js`** (cualquier comentario que cambie el hash del archivo sirve para forzar update en clientes existentes) — **no en `public/sw.js`**, que es build output: Serwist lo compila desde `src/sw.js` (`swSrc`/`swDest` en `next.config.js`) y lo pisa en cada build, así que cualquier edición manual ahí se pierde.
 3. Recargar con cache disabled.
 
 **Fix preventivo:** versionar el SW automáticamente al deployar (poner el commit hash en un comentario del SW como build step).
@@ -53,13 +54,20 @@ Usar `100dvh` (dynamic viewport height) en su lugar:
 
 ## Drag & drop del kanban
 
-(Sección a llenar cuando se construya el PATCH y aparezcan los primeros bugs reales del drag & drop entre columnas. Por ahora vacía.)
+(Construido en `d163f3b`, PATCH de transición de estado incluido. Sin gotchas puntuales identificados en el historial de commits posterior — se llena acá si aparece alguno.)
 
 ## Storage de fotos
 
-### Decisión pendiente, F1.2 paso 3 bloqueado
+### Resuelto con base64 client-compressed — es deuda técnica, no una integración real
 
-No abrir paso 3 del registro hasta que la decisión esté tomada (Cloudflare R2 vs Uploadthing vs Supabase). La integración va a impactar también a 918TAG, así que la decisión tiene que servir para los dos productos. Una vez tomada, agregar la sección de integración acá con los gotchas que aparezcan (subida directa vs presigned URLs, límites de tamaño, manejo de progreso, errores de red en mobile).
+No se terminó eligiendo entre Cloudflare R2 / Uploadthing / Supabase. La solución real: `comprimirFoto()` en `src/app/registro/page.js` comprime client-side con `<canvas>` (maxWidth 1000px, calidad 0.7 JPEG) y el resultado se guarda como string base64 directo en `FotoRecepcion.url` (columna de Postgres).
+
+**Riesgos conocidos:**
+- Infla la DB — cada foto pesa varias veces más como base64 que como binario.
+- No hay CDN: cada carga de página trae el base64 completo desde Postgres, no un asset optimizado.
+- No escala con volumen — sirve para F&F con pocas fotos por bici, no para producción real.
+
+Si se migra a un storage real (R2, como en 918TAG), agregar acá los gotchas que aparezcan (subida directa vs presigned URLs, límites de tamaño, manejo de progreso, errores de red en mobile, y migración de las fotos ya guardadas como base64).
 
 ## WhatsApp Business API
 
@@ -71,7 +79,7 @@ Cuando se arme la integración, los templates de mensaje (precio, turno, hallazg
 
 ## Pendientes de llenar
 
-- F1: PATCH transiciones del kanban (próxima sesión).
-- F1.3: bottom sheet (próxima sesión).
-- F1.2: registro de bici 4 pasos (después de decidir storage).
-- F2+: integración WhatsApp.
+- F1: PATCH transiciones del kanban — hecho (`d163f3b`).
+- F1.3: bottom sheet — hecho (`DetalleBici`, ver `0bcc9ac`/`d05c498`).
+- F1.2: registro de bici 4 pasos — hecho, storage resuelto con base64 (ver sección arriba).
+- F2+: integración WhatsApp — sigue pendiente, cero código todavía.
