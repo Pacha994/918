@@ -1,0 +1,149 @@
+.page {
+  min-height: 100dvh;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px 20px;
+  box-sizing: border-box;
+}
+
+.marca {
+  font-family: var(--f);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--or);
+  margin-bottom: 32px;
+}
+
+.card {
+  width: 100%;
+  max-width: 420px;
+  background: var(--bg2);
+  border: 1px solid var(--b2);
+  border-radius: var(--r-card);
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.estado {
+  text-align: center;
+  padding: 24px 8px;
+  color: var(--t3);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.estadoTitulo {
+  font-size: 16px;
+  color: var(--t1);
+  margin-bottom: 8px;
+}
+
+.badgeResuelto {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: var(--r-badge);
+  margin-bottom: 12px;
+}
+
+.badgeAprobado {
+  background: var(--gr1);
+  color: var(--gr);
+}
+
+.badgeRechazado {
+  background: var(--re1);
+  color: var(--re);
+}
+
+.seccionLabel {
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--t4);
+  margin-bottom: 8px;
+}
+
+.foto {
+  width: 100%;
+  max-height: 240px;
+  object-fit: cover;
+  border-radius: var(--r-card);
+  border: 1px solid var(--b2);
+  margin-bottom: 16px;
+}
+
+.descripcion {
+  font-size: 15px;
+  color: var(--t1);
+  line-height: 1.5;
+  margin-bottom: 16px;
+}
+
+.precioWrap {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 12px 14px;
+  background: var(--bg3);
+  border-radius: var(--r-card);
+  margin-bottom: 20px;
+}
+
+.precioLabel {
+  font-size: 12px;
+  color: var(--t4);
+}
+
+.precioVal {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--t1);
+}
+
+.acciones {
+  display: flex;
+  gap: 10px;
+}
+
+.btnAprobar {
+  font-family: var(--f);
+  font-size: 15px;
+  font-weight: 500;
+  flex: 1;
+  padding: 12px;
+  background: var(--gr);
+  color: #0a1a0f;
+  border: none;
+  border-radius: var(--r-input);
+  cursor: pointer;
+  transition: opacity 0.12s;
+}
+.btnAprobar:hover    { opacity: 0.9; }
+.btnAprobar:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btnRechazar {
+  font-family: var(--f);
+  font-size: 15px;
+  flex: 1;
+  padding: 12px;
+  background: transparent;
+  color: var(--re);
+  border: 1px solid rgba(224,80,80,.3);
+  border-radius: var(--r-input);
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.btnRechazar:hover    { border-color: var(--re); background: var(--re1); }
+.btnRechazar:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.error {
+  margin-top: 14px;
+  font-size: 13px;
+  color: var(--re);
+  text-align: center;
+}

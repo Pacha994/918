@@ -83,6 +83,15 @@ model Hallazgo {
   respondidoEn DateTime?
   biciId       String
   bici         Bici           @relation(fields: [biciId], references: [id])
+
+  // Link público de aprobación (/aprobar/[hallazgoId]?token=...) - se manda
+  // manualmente por WhatsApp. hash de un token de 256 bits, nunca se guarda
+  // el token crudo. aprobacionTokenUsadoEn es best-effort para debug/UX,
+  // el estado real de "ya resuelto" siempre se lee de `estado`.
+  aprobacionTokenHash    String?   @unique
+  aprobacionTokenExpira  DateTime?
+  aprobacionTokenUsadoEn DateTime?
+
   @@schema("app918")
 }
 
