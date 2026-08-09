@@ -149,10 +149,16 @@ DATABASE_URL=<Railway postgres, host distinto al de 918TAG>   # la única que le
 DATABASE_PUBLIC_URL=<Railway postgres, endpoint público>       # presente pero no referenciada por
                                                                  # ningún código — convención estándar
                                                                  # de Railway al linkear el plugin Postgres
+NEXT_PUBLIC_APP_URL=http://localhost:3000                      # dominio base para links generados
+                                                                 # (aprobación de hallazgos). NEXT_PUBLIC_
+                                                                 # → se congela en el bundle en next build,
+                                                                 # en Vercel hay que setearla en el dashboard
+                                                                 # ANTES de buildear producción (Fase 6),
+                                                                 # cambiarla después no alcanza sin redeploy
 # WhatsApp Business API + MercadoPago: sin variables todavía, no hay integración que las use
 ```
 
-`NEXT_PUBLIC_BASE_URL` que figuraba antes en este doc **no existe en `.env` ni se usa en ningún lado del código** — se sacó de la lista.
+`NEXT_PUBLIC_BASE_URL` (nombre distinto al de arriba) que figuraba antes en este doc **no existe en `.env` ni se usa en ningún lado del código** — sigue sin existir, no confundir con `NEXT_PUBLIC_APP_URL`.
 
 ## Relación con 918TAG
 

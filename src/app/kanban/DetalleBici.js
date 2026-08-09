@@ -132,7 +132,11 @@ export default function DetalleBici({ bici, onClose, onAvanzar, onHallazgoCreado
       const res = await fetch(`/api/hallazgos/${hallazgoId}/link-aprobacion`, { method: 'POST' })
       if (!res.ok) throw new Error()
       const { token } = await res.json()
-      const url = `${window.location.origin}/aprobar/${hallazgoId}?token=${token}`
+      // NEXT_PUBLIC_APP_URL si está seteada (Vercel, Fase 6); si no,
+      // window.location.origin ya resuelve bien en cualquier entorno donde
+      // se abra esta pantalla - es un fallback, no el mecanismo principal.
+      const base = process.env.NEXT_PUBLIC_APP_URL || window.location.origin
+      const url = `${base}/aprobar/${hallazgoId}?token=${token}`
       setLinks(prev => ({ ...prev, [hallazgoId]: url }))
     } catch (err) {
       console.error('Error generando link de aprobación:', err)
