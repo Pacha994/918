@@ -54,7 +54,8 @@ function SkeletonColumna({ count = 2 }) {
 
 export default function KanbanPage() {
   const router = useRouter()
-  const [bicis,       setBicis]       = useState([])
+  const [bicis,        setBicis]        = useState([])
+  const [tallerNombre, setTallerNombre] = useState('')
   const [cargando,    setCargando]    = useState(true)
   const [avanzando,   setAvanzando]   = useState(null)
   const [saliendo,    setSaliendo]    = useState(new Set())
@@ -81,6 +82,15 @@ export default function KanbanPage() {
   }, [])
 
   useEffect(() => { cargarBicis() }, [cargarBicis])
+
+  // Nombre del taller logueado, para el indicador del header - hoy no había
+  // forma de saber en qué cuenta estabas parado.
+  useEffect(() => {
+    fetch('/api/taller')
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data?.nombre) setTallerNombre(data.nombre) })
+      .catch(() => {})
+  }, [])
 
   const handleVerDetalle = (bici) => setBiciDetalle(bici)
   const handleCerrarDetalle = () => setBiciDetalle(null)
@@ -276,7 +286,11 @@ export default function KanbanPage() {
         <div className={styles.headerLeft}>
           <span className={styles.logo}>918</span>
           {!cargando && (
-            <span className={styles.headerMeta}>{bicisActivas.length} en taller</span>
+            <span className={styles.headerMeta}>
+              {tallerNombre && <strong className={styles.headerTaller}>{tallerNombre}</strong>}
+              {tallerNombre && ' · '}
+              {bicisActivas.length} en taller
+            </span>
           )}
         </div>
         <div className={styles.headerRight}>

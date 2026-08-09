@@ -63,6 +63,7 @@ export default function ConfiguracionPage() {
 
   const [nombre,    setNombre]    = useState('')
   const [servicios, setServicios] = useState([])
+  const [saliendo,  setSaliendo]  = useState(false)
 
   // Servicio expandido actualmente (índice o null)
   const [expandido, setExpandido] = useState(null)
@@ -140,6 +141,18 @@ export default function ConfiguracionPage() {
       setError('No se pudo guardar. Intentá de nuevo.')
     } finally {
       setGuardando(false)
+    }
+  }
+
+  // ── Cerrar sesión ──
+  const handleCerrarSesion = async () => {
+    setSaliendo(true)
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' })
+    } catch (err) {
+      console.error(err)
+    } finally {
+      router.push('/login')
     }
   }
 
@@ -290,6 +303,21 @@ export default function ConfiguracionPage() {
               )}
             </div>
           ))}
+        </div>
+
+        {/* Sección: Sesión */}
+        <div className={styles.seccion}>
+          <div className={styles.seccionLabel}>Sesión</div>
+          <div className={styles.campo}>
+            <div className={styles.tallerLogueado}>Conectado como <strong>{nombre}</strong></div>
+            <button
+              className={styles.btnCerrarSesion}
+              onClick={handleCerrarSesion}
+              disabled={saliendo}
+            >
+              {saliendo ? 'Saliendo…' : 'Cerrar sesión'}
+            </button>
+          </div>
         </div>
 
         {/* Guardar bottom */}

@@ -378,3 +378,27 @@
 }
 .btnGuardarFull:hover    { background: #e5551a; }
 .btnGuardarFull:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.tallerLogueado {
+  font-size: 14px;
+  color: var(--t3);
+  margin-bottom: 12px;
+}
+.tallerLogueado strong { color: var(--t1); }
+
+.btnCerrarSesion {
+  font-family: var(--f);
+  font-size: 14px;
+  font-weight: 500;
+  padding: 12px;
+  width: 100%;
+  background: transparent;
+  color: var(--re);
+  border: 1px solid rgba(224,80,80,.35);
+  border-radius: var(--r-input);
+  cursor: pointer;
+  transition: all 0.12s;
+  text-align: center;
+}
+.btnCerrarSesion:hover    { background: var(--re1); border-color: var(--re); }
+.btnCerrarSesion:disabled { opacity: 0.5; cursor: not-allowed; }
