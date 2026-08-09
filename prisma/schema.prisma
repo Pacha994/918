@@ -34,6 +34,8 @@ model Cliente {
 model Bici {
   id           String     @id @default(cuid())
   modelo       String
+  marca        String?
+  anio         Int?
   color        String?
   estado       EstadoBici @default(ingresada)
   tipoServicio String?
