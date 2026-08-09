@@ -22,7 +22,7 @@ export default function KanbanCard({ bici, avanzando, onAvanzar, onVerDetalle })
       )}
 
       <div className={styles.header}>
-        <div className={styles.modelo}>{bici.modelo}</div>
+        <div className={styles.modelo}>{[bici.marca, bici.modelo].filter(Boolean).join(' ')}</div>
         <div className={styles.tiempo}>{tiempoTranscurrido}</div>
       </div>
 
