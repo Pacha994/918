@@ -19,6 +19,43 @@ const WA_PREVIEW = {
   entregada: (modelo) => `Acá tenés el historial completo de todo lo que le hicimos a tu bici: [link]`,
 }
 
+// Compartido entre paso 1 y paso 2 - mismo estado/handler en los dos
+// lugares. Vive en paso 1 (al lado de nombre/whatsapp) y sigue disponible
+// en paso 2 por si el mecánico se lo salteó al principio.
+function CampoIdTag({ value, onChange, onBlur, estado, metaTexto }) {
+  return (
+    <>
+      <div className={styles.seccionLabel}>IDtag 918TAG (opcional)</div>
+      <div className={styles.campo}>
+        <input
+          className={styles.input}
+          type="text"
+          placeholder="T3-0994-5T"
+          value={value}
+          onChange={onChange}
+          onBlur={onBlur}
+          autoComplete="off"
+        />
+      </div>
+      {estado === 'buscando' && (
+        <div className={styles.hint}>Buscando en 918TAG…</div>
+      )}
+      {estado === 'encontrado' && (
+        <div className={styles.clienteEncontrado}>
+          <span className={styles.clienteEncontradoDot} />
+          <div className={styles.clienteEncontradoInfo}>
+            <div className={styles.clienteEncontradoNombre}>Bici encontrada</div>
+            <div className={styles.clienteEncontradoMeta}>{metaTexto}</div>
+          </div>
+        </div>
+      )}
+      {estado === 'no-encontrado' && (
+        <div className={styles.hint}>No encontrado en 918TAG · cargá los datos manualmente.</div>
+      )}
+    </>
+  )
+}
+
 export default function RegistroPage() {
   const router = useRouter()
   const [paso, setPaso] = useState(1)
@@ -28,6 +65,14 @@ export default function RegistroPage() {
   const [clienteWhatsapp,  setClienteWhatsapp]  = useState('')
   const [clienteExistente, setClienteExistente] = useState(null)
 
+  // IDtag 918TAG (opcional) — vive principalmente en el paso 1, pero el
+  // campo también se renderiza en el paso 2 por si se lo saltearon acá.
+  // Comparte este mismo estado en los dos lugares: autocompleta
+  // marca/modelo/año/color/fotos (estado del paso 2) apenas resuelve,
+  // esté el mecánico en el paso que esté.
+  const [idTag918,    setIdTag918]    = useState('')
+  const [idTagEstado, setIdTagEstado] = useState('idle') // idle | buscando | encontrado | no-encontrado
+
   // ── Paso 2: Bici y fotos ──
   const [marca,  setMarca]  = useState('')
   const [modelo, setModelo] = useState('')
@@ -35,10 +80,6 @@ export default function RegistroPage() {
   const [color,  setColor]  = useState('')
   const [fotos, setFotos] = useState([]) // array de base64 comprimidos
   const fotoRef = useRef(null)
-
-  // IDtag 918TAG (opcional) — autocompleta marca/modelo/año/color/fotos
-  const [idTag918,   setIdTag918]   = useState('')
-  const [idTagEstado, setIdTagEstado] = useState('idle') // idle | buscando | encontrado | no-encontrado
 
   // ── Paso 3: Motivo ──
   const [tipoServicio,     setTipoServicio]     = useState('')
@@ -247,6 +288,16 @@ export default function RegistroPage() {
                 onChange={e => setClienteNombre(e.target.value)}
               />
             </div>
+
+            <div style={{ marginTop: 24 }}>
+              <CampoIdTag
+                value={idTag918}
+                onChange={e => { setIdTag918(e.target.value); setIdTagEstado('idle') }}
+                onBlur={handleIdTagBlur}
+                estado={idTagEstado}
+                metaTexto="Bici encontrada · datos precargados."
+              />
+            </div>
           </div>
         )}
 
@@ -254,33 +305,13 @@ export default function RegistroPage() {
         {paso === 2 && (
           <div className={styles.paso}>
 
-            <div className={styles.seccionLabel}>IDtag 918TAG (opcional)</div>
-            <div className={styles.campo}>
-              <input
-                className={styles.input}
-                type="text"
-                placeholder="T3-0994-5T"
-                value={idTag918}
-                onChange={e => { setIdTag918(e.target.value); setIdTagEstado('idle') }}
-                onBlur={handleIdTagBlur}
-                autoComplete="off"
-              />
-            </div>
-            {idTagEstado === 'buscando' && (
-              <div className={styles.hint}>Buscando en 918TAG…</div>
-            )}
-            {idTagEstado === 'encontrado' && (
-              <div className={styles.clienteEncontrado}>
-                <span className={styles.clienteEncontradoDot} />
-                <div className={styles.clienteEncontradoInfo}>
-                  <div className={styles.clienteEncontradoNombre}>Bici encontrada</div>
-                  <div className={styles.clienteEncontradoMeta}>Datos precargados · revisalos y corregí lo que haga falta.</div>
-                </div>
-              </div>
-            )}
-            {idTagEstado === 'no-encontrado' && (
-              <div className={styles.hint}>No encontrado en 918TAG · cargá los datos manualmente.</div>
-            )}
+            <CampoIdTag
+              value={idTag918}
+              onChange={e => { setIdTag918(e.target.value); setIdTagEstado('idle') }}
+              onBlur={handleIdTagBlur}
+              estado={idTagEstado}
+              metaTexto="Datos precargados · revisalos y corregí lo que haga falta."
+            />
 
             <div className={styles.seccionLabel} style={{ marginTop: 24 }}>Fotos de recepción</div>
             <input
