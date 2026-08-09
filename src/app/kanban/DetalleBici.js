@@ -34,6 +34,11 @@ const TIPO_SERVICIO_LABEL = {
   diagnostico: 'Solo diagnóstico',
 }
 
+function buildMensajeWhatsapp(hallazgo, link) {
+  const precio = Number(hallazgo.precio).toLocaleString('es-AR')
+  return `Hola! Encontramos esto en tu bici: ${hallazgo.descripcion} ($${precio}). Confirmame acá si querés que lo hagamos: ${link}`
+}
+
 export default function DetalleBici({ bici, onClose, onAvanzar, onHallazgoCreado }) {
   const [avanzando,       setAvanzando]       = useState(false)
   const [retrocediendo,   setRetrocediendo]   = useState(false)
@@ -42,6 +47,9 @@ export default function DetalleBici({ bici, onClose, onAvanzar, onHallazgoCreado
   const [mostrarForm,     setMostrarForm]     = useState(false)
   const [hallazgos,       setHallazgos]       = useState(bici.hallazgos || [])
   const [resolviendoId,   setResolviendoId]   = useState(null)
+  const [linkGenerando,   setLinkGenerando]   = useState(null)
+  const [links,           setLinks]           = useState({})
+  const [copiadoId,       setCopiadoId]       = useState(null)
 
   const indexEstado    = ESTADOS.indexOf(bici.estado)
   const hayPendiente   = hallazgos.some(h => h.estado === 'pendiente')
@@ -115,6 +123,33 @@ export default function DetalleBici({ bici, onClose, onAvanzar, onHallazgoCreado
       console.error('Error resolviendo hallazgo:', err)
     } finally {
       setResolviendoId(null)
+    }
+  }
+
+  const handleGenerarLink = async (hallazgoId) => {
+    setLinkGenerando(hallazgoId)
+    try {
+      const res = await fetch(`/api/hallazgos/${hallazgoId}/link-aprobacion`, { method: 'POST' })
+      if (!res.ok) throw new Error()
+      const { token } = await res.json()
+      const url = `${window.location.origin}/aprobar/${hallazgoId}?token=${token}`
+      setLinks(prev => ({ ...prev, [hallazgoId]: url }))
+    } catch (err) {
+      console.error('Error generando link de aprobación:', err)
+    } finally {
+      setLinkGenerando(null)
+    }
+  }
+
+  const handleCopiarLink = async (hallazgoId) => {
+    const url = links[hallazgoId]
+    if (!url) return
+    try {
+      await navigator.clipboard.writeText(url)
+      setCopiadoId(hallazgoId)
+      setTimeout(() => setCopiadoId(prev => (prev === hallazgoId ? null : prev)), 2000)
+    } catch (err) {
+      console.error('Error copiando link:', err)
     }
   }
 
@@ -235,6 +270,42 @@ export default function DetalleBici({ bici, onClose, onAvanzar, onHallazgoCreado
                       {h.estado === 'rechazado'  && 'Rechazado'}
                     </div>
                   </div>
+
+                  {h.estado === 'pendiente' && (
+                    <div className={styles.hallazgoEnviar}>
+                      {!links[h.id] ? (
+                        <button
+                          className={styles.btnEnviarCliente}
+                          disabled={linkGenerando === h.id}
+                          onClick={() => handleGenerarLink(h.id)}
+                        >
+                          {linkGenerando === h.id ? 'Generando link…' : 'Enviar al cliente'}
+                        </button>
+                      ) : (
+                        <div className={styles.linkBox}>
+                          <input
+                            className={styles.linkInput}
+                            readOnly
+                            value={links[h.id]}
+                            onClick={e => e.target.select()}
+                          />
+                          <div className={styles.linkAcciones}>
+                            <button className={styles.btnCopiar} onClick={() => handleCopiarLink(h.id)}>
+                              {copiadoId === h.id ? '✓ Copiado' : 'Copiar link'}
+                            </button>
+                            <a
+                              className={styles.btnWhatsapp}
+                              href={`https://wa.me/${(bici.cliente?.whatsapp || '').replace(/\D/g, '')}?text=${encodeURIComponent(buildMensajeWhatsapp(h, links[h.id]))}`}
+                              target="_blank"
+                              rel="noreferrer"
+                            >
+                              Abrir WhatsApp
+                            </a>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   {h.estado === 'pendiente' && (
                     <div className={styles.hallazgoSimular}>

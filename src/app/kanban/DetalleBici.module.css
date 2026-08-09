@@ -286,6 +286,70 @@
 .badge_aprobado  { background: var(--gr1); color: var(--gr); }
 .badge_rechazado { background: var(--b2);  color: var(--t4); }
 
+.hallazgoEnviar {
+  padding: 8px 12px;
+  border-top: 1px solid var(--b1);
+}
+
+.btnEnviarCliente {
+  font-family: var(--f);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 8px 10px;
+  width: 100%;
+  background: var(--bl1);
+  color: var(--bl);
+  border: 1px solid rgba(77,159,255,.3);
+  border-radius: var(--r-input);
+  cursor: pointer;
+  transition: all .1s;
+}
+.btnEnviarCliente:hover    { background: rgba(77,159,255,.2); }
+.btnEnviarCliente:disabled { opacity: .5; cursor: not-allowed; }
+
+.linkBox { display: flex; flex-direction: column; gap: 6px; }
+
+.linkInput {
+  font-family: var(--f);
+  font-size: 12px;
+  width: 100%;
+  padding: 7px 9px;
+  background: var(--bg3);
+  border: 1px solid var(--b2);
+  border-radius: var(--r-input);
+  color: var(--t3);
+  box-sizing: border-box;
+}
+
+.linkAcciones { display: flex; gap: 6px; }
+
+.btnCopiar,
+.btnWhatsapp {
+  font-family: var(--f);
+  font-size: 12px;
+  padding: 6px 10px;
+  flex: 1;
+  text-align: center;
+  border-radius: var(--r-input);
+  cursor: pointer;
+  transition: all .1s;
+  text-decoration: none;
+}
+
+.btnCopiar {
+  background: var(--bg3);
+  color: var(--t2);
+  border: 1px solid var(--b2);
+}
+.btnCopiar:hover { border-color: var(--b3); color: var(--t1); }
+
+.btnWhatsapp {
+  background: var(--gr1);
+  color: var(--gr);
+  border: 1px solid rgba(30,200,100,.3);
+}
+.btnWhatsapp:hover { background: rgba(30,200,100,.2); }
+
 .hallazgoSimular {
   display: flex;
   align-items: center;
