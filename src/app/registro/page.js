@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import styles from './registro.module.css'
+import { comprimirFoto } from '@/lib/comprimirFoto'
 
 const SERVICIOS = [
   { id: 'basico',      label: 'Service básico' },
@@ -16,22 +17,6 @@ const PROBLEMAS_TAGS = ['frenos', 'cambios', 'cadena', 'rueda pinchada', 'horqui
 const WA_PREVIEW = {
   lista:     (modelo) => `Hola! Tu ${modelo} ya está lista para retirar. Pasá cuando quieras 🚲`,
   entregada: (modelo) => `Acá tenés el historial completo de todo lo que le hicimos a tu bici: [link]`,
-}
-
-function comprimirFoto(file, maxWidth = 1000, quality = 0.7) {
-  return new Promise((resolve, reject) => {
-    const img = new Image()
-    img.onload = () => {
-      const scale = Math.min(1, maxWidth / img.width)
-      const canvas = document.createElement('canvas')
-      canvas.width  = Math.round(img.width  * scale)
-      canvas.height = Math.round(img.height * scale)
-      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height)
-      resolve(canvas.toDataURL('image/jpeg', quality))
-    }
-    img.onerror = reject
-    img.src = URL.createObjectURL(file)
-  })
 }
 
 export default function RegistroPage() {

@@ -2,6 +2,7 @@
 
 import { useState, useRef } from 'react'
 import styles from './HallazgoForm.module.css'
+import { comprimirFoto } from '@/lib/comprimirFoto'
 
 export default function HallazgoForm({ bici, onClose, onHallazgoCreado }) {
   const [descripcion, setDescripcion] = useState('')
@@ -11,12 +12,17 @@ export default function HallazgoForm({ bici, onClose, onHallazgoCreado }) {
   const [error,       setError]       = useState(null)
   const fileRef = useRef(null)
 
-  const handleFoto = (e) => {
+  const handleFoto = async (e) => {
     const archivo = e.target.files[0]
     if (!archivo) return
-    const reader = new FileReader()
-    reader.onload = (ev) => setFotoUrl(ev.target.result)
-    reader.readAsDataURL(archivo)
+    try {
+      const dataUrl = await comprimirFoto(archivo)
+      setFotoUrl(dataUrl)
+    } catch (err) {
+      console.error('Error comprimiendo foto:', err)
+    }
+    // reset input para poder sacar otra del mismo archivo
+    e.target.value = ''
   }
 
   const handleEnviar = async () => {
