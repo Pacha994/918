@@ -66,6 +66,8 @@ export async function POST(request) {
     const nuevaBici = await prisma.bici.create({
       data: {
         modelo:       bici.modelo,
+        marca:        bici.marca       || null,
+        anio:         bici.anio        || null,
         color:        bici.color       || null,
         tipoServicio: bici.tipoServicio || null,
         notas:        bici.notas       || null,

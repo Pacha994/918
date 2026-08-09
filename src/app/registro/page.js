@@ -44,10 +44,16 @@ export default function RegistroPage() {
   const [clienteExistente, setClienteExistente] = useState(null)
 
   // ── Paso 2: Bici y fotos ──
+  const [marca,  setMarca]  = useState('')
   const [modelo, setModelo] = useState('')
+  const [anio,   setAnio]   = useState('')
   const [color,  setColor]  = useState('')
   const [fotos, setFotos] = useState([]) // array de base64 comprimidos
   const fotoRef = useRef(null)
+
+  // IDtag 918TAG (opcional) — autocompleta marca/modelo/año/color/fotos
+  const [idTag918,   setIdTag918]   = useState('')
+  const [idTagEstado, setIdTagEstado] = useState('idle') // idle | buscando | encontrado | no-encontrado
 
   // ── Paso 3: Motivo ──
   const [tipoServicio,     setTipoServicio]     = useState('')
@@ -99,7 +105,36 @@ export default function RegistroPage() {
     e.target.value = ''
   }
 
+  const handleQuitarFoto = (idx) => {
+    setFotos(prev => prev.filter((_, i) => i !== idx))
+  }
+
   const fotosCount = fotos.length
+
+  // Mismo patrón que handleWhatsappBlur del paso 1: fetch en el onBlur.
+  // Este pasa por descarga+recompresión de fotos del lado del proxy, tarda
+  // más que el de WhatsApp (de ahí el estado "buscando" con indicador propio).
+  const handleIdTagBlur = async () => {
+    const tag = idTag918.trim().toUpperCase()
+    if (!tag) { setIdTagEstado('idle'); return }
+    setIdTagEstado('buscando')
+    try {
+      const res = await fetch(`/api/tagmaker/${encodeURIComponent(tag)}`)
+      if (!res.ok) { setIdTagEstado('no-encontrado'); return }
+      const data = await res.json()
+
+      setMarca(data.brand || '')
+      setModelo(data.model || '')
+      setAnio(data.year != null ? String(data.year) : '')
+      setColor(data.color || '')
+      if (Array.isArray(data.photos) && data.photos.length > 0) {
+        setFotos(prev => [...prev, ...data.photos])
+      }
+      setIdTagEstado('encontrado')
+    } catch (_) {
+      setIdTagEstado('no-encontrado')
+    }
+  }
 
   const handleContinuarP2 = () => {
     if (!modelo.trim()) { setError('El modelo es requerido'); return }
@@ -141,6 +176,8 @@ export default function RegistroPage() {
           },
           bici: {
             modelo:       modelo.trim(),
+            marca:        marca.trim() || null,
+            anio:         anio.trim() ? Number(anio.trim()) : null,
             color:        color.trim() || null,
             tipoServicio: tipoServicio || null,
             problemas:    problemasActivos,
@@ -232,7 +269,35 @@ export default function RegistroPage() {
         {paso === 2 && (
           <div className={styles.paso}>
 
-            <div className={styles.seccionLabel}>Fotos de recepción</div>
+            <div className={styles.seccionLabel}>IDtag 918TAG (opcional)</div>
+            <div className={styles.campo}>
+              <input
+                className={styles.input}
+                type="text"
+                placeholder="T3-0994-5T"
+                value={idTag918}
+                onChange={e => { setIdTag918(e.target.value); setIdTagEstado('idle') }}
+                onBlur={handleIdTagBlur}
+                autoComplete="off"
+              />
+            </div>
+            {idTagEstado === 'buscando' && (
+              <div className={styles.hint}>Buscando en 918TAG…</div>
+            )}
+            {idTagEstado === 'encontrado' && (
+              <div className={styles.clienteEncontrado}>
+                <span className={styles.clienteEncontradoDot} />
+                <div className={styles.clienteEncontradoInfo}>
+                  <div className={styles.clienteEncontradoNombre}>Bici encontrada</div>
+                  <div className={styles.clienteEncontradoMeta}>Datos precargados · revisalos y corregí lo que haga falta.</div>
+                </div>
+              </div>
+            )}
+            {idTagEstado === 'no-encontrado' && (
+              <div className={styles.hint}>No encontrado en 918TAG · cargá los datos manualmente.</div>
+            )}
+
+            <div className={styles.seccionLabel} style={{ marginTop: 24 }}>Fotos de recepción</div>
             <input
               ref={fotoRef}
               type="file"
@@ -243,7 +308,17 @@ export default function RegistroPage() {
             />
             <div className={styles.fotosWrap}>
               {fotos.map((src, i) => (
-                <img key={i} src={src} alt="" className={styles.fotoThumb} />
+                <div key={i} className={styles.fotoItem}>
+                  <img src={src} alt="" className={styles.fotoThumb} />
+                  <button
+                    type="button"
+                    className={styles.fotoBtnQuitar}
+                    onClick={() => handleQuitarFoto(i)}
+                    aria-label="Quitar foto"
+                  >
+                    ×
+                  </button>
+                </div>
               ))}
               <button
                 className={styles.fotoBtnSacar}
@@ -256,18 +331,42 @@ export default function RegistroPage() {
               </button>
             </div>
             {fotosCount > 0 && (
-              <div className={styles.hint}>{fotosCount} foto{fotosCount > 1 ? 's' : ''} tomada{fotosCount > 1 ? 's' : ''}.</div>
+              <div className={styles.hint}>{fotosCount} foto{fotosCount > 1 ? 's' : ''} cargada{fotosCount > 1 ? 's' : ''}.</div>
             )}
 
-            <div className={styles.seccionLabel} style={{ marginTop: 24 }}>Modelo</div>
+            <div className={styles.seccionLabel} style={{ marginTop: 24 }}>Marca</div>
             <div className={styles.campo}>
               <input
                 className={styles.input}
                 type="text"
-                placeholder="Trek Marlin 7, Specialized Rockhopper…"
+                placeholder="Trek, Specialized, Teknial…"
+                value={marca}
+                onChange={e => setMarca(e.target.value)}
+                autoComplete="off"
+              />
+            </div>
+
+            <div className={styles.seccionLabel}>Modelo</div>
+            <div className={styles.campo}>
+              <input
+                className={styles.input}
+                type="text"
+                placeholder="Marlin 7, Rockhopper, Tarpan 400ER…"
                 value={modelo}
                 onChange={e => setModelo(e.target.value)}
                 autoComplete="off"
+              />
+            </div>
+
+            <div className={styles.campo}>
+              <label className={styles.campoLabel}>Año</label>
+              <input
+                className={styles.input}
+                type="text"
+                inputMode="numeric"
+                placeholder="2022"
+                value={anio}
+                onChange={e => setAnio(e.target.value.replace(/\D/g, '').slice(0, 4))}
               />
             </div>
 
@@ -348,7 +447,11 @@ export default function RegistroPage() {
               </div>
               <div className={styles.resumenFila}>
                 <span className={styles.resumenKey}>Bici</span>
-                <span className={styles.resumenVal}>{modelo}{color ? ` · ${color}` : ''}</span>
+                <span className={styles.resumenVal}>
+                  {[marca, modelo].filter(Boolean).join(' ')}
+                  {anio ? ` (${anio})` : ''}
+                  {color ? ` · ${color}` : ''}
+                </span>
               </div>
               <div className={styles.resumenFila}>
                 <span className={styles.resumenKey}>Servicio</span>
