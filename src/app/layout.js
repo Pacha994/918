@@ -3,7 +3,9 @@ import "./globals.css";
 
 const barlow = Barlow_Semi_Condensed({
   subsets: ['latin'],
-  weight: ['300', '400', '500'],
+  // 600/700 sumados en experiment/918tag-ds: --fw-semibold y --fw-bold del DS
+  // de 918tag los necesitan (antes sólo se cargaba hasta 500).
+  weight: ['300', '400', '500', '600', '700'],
   display: 'swap',
   variable: '--font-barlow',
 })

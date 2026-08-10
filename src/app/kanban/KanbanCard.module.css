@@ -1,7 +1,7 @@
 .card {
-  background: var(--bg2);
-  border: 1px solid var(--b2);
-  border-radius: var(--r-card);
+  background: var(--blue-card);
+  border: var(--stroke-sm) solid var(--b2);
+  border-radius: var(--r-lg);
   overflow: hidden;
   cursor: pointer;
   transition: border-color 0.1s, background 0.1s;
@@ -10,8 +10,8 @@
   gap: 4px;
 }
 
-.card:hover  { border-color: var(--b3); background: var(--bg3); }
-.card:active { background: var(--bg4); }
+.card:hover  { border-color: var(--b3); background: var(--blue-hover); }
+.card:active { background: var(--blue-input); }
 
 /* Foto portada */
 .fotoPortada {
@@ -19,7 +19,7 @@
   height: 96px;
   object-fit: cover;
   display: block;
-  border-bottom: 1px solid var(--b1);
+  border-bottom: var(--stroke-sm) solid var(--b1);
 }
 
 /* Header */
@@ -74,12 +74,12 @@
 /* Botón avanzar */
 .btnAvanzar {
   font-family: var(--f);
-  font-size: 12px;
+  font-size: var(--fs-2xs);
   padding: 4px 10px;
   background: transparent;
-  color: var(--or);
-  border: 1px solid rgba(255,96,26,.3);
-  border-radius: var(--r-input);
+  color: var(--lime);
+  border: var(--stroke-sm) solid var(--lime-border);
+  border-radius: var(--r-md);
   cursor: pointer;
   transition: all 0.12s;
   white-space: nowrap;
@@ -89,12 +89,12 @@
   align-items: center;
   justify-content: center;
 }
-.btnAvanzar:hover:not(:disabled) { background: var(--or1); border-color: var(--or); }
-.btnAvanzar:active:not(:disabled) { background: rgba(255,96,26,.2); }
+.btnAvanzar:hover:not(:disabled) { background: var(--lime-faint); border-color: var(--lime); }
+.btnAvanzar:active:not(:disabled) { background: var(--lime-dim); }
 .btnAvanzar:disabled { cursor: not-allowed; }
 
 .btnAvanzandoActivo {
-  border-color: rgba(255,96,26,.2);
+  border-color: var(--lime-border);
   opacity: 0.7;
 }
 
@@ -103,8 +103,8 @@
   display: inline-block;
   width: 12px;
   height: 12px;
-  border: 1.5px solid rgba(255,96,26,.3);
-  border-top-color: var(--or);
+  border: var(--stroke-md) solid var(--lime-border);
+  border-top-color: var(--lime);
   border-radius: 50%;
   animation: spin 0.6s linear infinite;
 }

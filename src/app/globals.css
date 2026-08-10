@@ -1,6 +1,8 @@
 /* ══════════════════════════════════════
    918 · Design System Tokens
-   Source: design-system-v1.6.3
+   EXPERIMENTAL — experiment/918tag-ds: tokens tomados del DS de 918tag v1.2
+   (espejo del globals.css de 918tag), sólo los que ese DS documenta.
+   Ver 918-CLAUDE.md / commit de esta rama para el detalle del mapeo.
    ══════════════════════════════════════ */
 
 /* ── Reset ── */
@@ -11,53 +13,108 @@
 }
 
 :root {
-  /* Superficies */
-  --bg:  #111;
-  --bg2: #141414;
-  --bg3: #161616;
-  --bg4: #1a1a1a;
+  /* ── Fondos (918tag DS) ── */
+  --blue-deep:    #0e0b1f;
+  --blue-mid:     #2e2866;
+  --blue-surface: #1e1a45;
+  --blue-card:    #1a1739;
+  --blue-input:   #16132f;
+  --blue-hover:   #221f4a;
 
-  /* Bordes */
-  --b1: #1e1e1e;
-  --b2: #2a2a2a;
-  --b3: #3a3a3a;
-  --b4: #444;
+  /* ── Bordes (918tag DS) ── */
+  --b1: rgba(255, 255, 255, .06);
+  --b2: rgba(255, 255, 255, .10);
+  --b3: rgba(255, 255, 255, .16);
+  --b4: rgba(255, 255, 255, .24);
 
-  /* Texto */
-  --t1: #e8e4dc;
-  --t2: #c8c4bc;
-  --t3: #aaa;
-  --t4: #777;
+  /* ── Acento lima (reemplaza el naranja --or de 918workshop) ── */
+  --lime:        #CEFF00;
+  --lime-dim:    rgba(206, 255, 0, .12);
+  --lime-faint:  rgba(206, 255, 0, .06);
+  --lime-hover:  #b8e600;
+  --lime-border: rgba(206, 255, 0, .20);
 
-  /* Acento (naranja = acción del agente) */
-  --or:  #ff601a;
-  --or1: rgba(255, 96, 26, .10);
-  --or2: rgba(255, 96, 26, .06);
+  /* ── Texto (918tag DS) ── */
+  --t1: #F4F2FF;
+  --t2: #C8C5E8;
+  --t3: #8F8CB5;
+  --t4: #5C5A80;
 
-  /* Semánticos */
-  --gr:  #1ec864;
-  --gr1: rgba(30, 200, 100, .12);
-  --bl:  #4d9fff;
-  --bl1: rgba(77, 159, 255, .12);
-  --ye:  #d4a017;
-  --ye1: rgba(212, 160, 23, .12);
-  --re:  #e05050;
-  --re1: rgba(224, 80, 80, .12);
+  /* ── Semánticos (918tag DS) ── */
+  --gr:  #23D07A;
+  --gr1: rgba(35, 208, 122, .12);
+  --gr2: rgba(35, 208, 122, .20);
+  --ye:  #F5C518;
+  --ye1: rgba(245, 197, 24, .12);
+  --re:  #FF5252;
+  --re1: rgba(255, 82, 82, .12);
+  --bl:  #5B9BFF;
+  --bl1: rgba(91, 155, 255, .12);
+  --bl2: rgba(91, 155, 255, .20);
 
-  /* Tipografía */
+  /* ── Tipografía (918tag DS) ── */
   --f: var(--font-barlow), sans-serif;
+  --fs-2xs: 12px;
+  --fs-xs:  14px;
+  --fs-sm:  15px;
+  --fs-md:  16px;
+  --fs-lg:  18px;
+  --fs-xl:  20px;
+  --fs-2xl: 24px;
+  --fs-3xl: 32px;
+  --fs-4xl: 40px;
+  --fs-6xl: 44px;
 
-  /* Espaciado */
-  --sp-xs: 4px;
-  --sp-sm: 8px;
-  --sp-md: 16px;
-  --sp-lg: 24px;
-  --sp-xl: 32px;
+  --fw-regular:  400;
+  --fw-medium:   500;
+  --fw-semibold: 600;
+  --fw-bold:     700;
 
-  /* Radios */
-  --r-badge: 2px;
-  --r-input: 3px;
-  --r-card:  4px;
+  /* ── Spacing (918tag DS — valores idénticos a los que ya usaba 918workshop) ── */
+  --sp-xs:  4px;
+  --sp-sm:  8px;
+  --sp-md:  16px;
+  --sp-lg:  24px;
+  --sp-xl:  32px;
+  --sp-2xl: 48px;
+  --sp-3xl: 64px;
+
+  /* ── Radios (918tag DS) ── */
+  --r-xs:   4px;
+  --r-sm:   6px;
+  --r-md:   10px;
+  --r-lg:   16px;
+  --r-xl:   20px;
+  --r-full: 999px;
+
+  /* ── Strokes (918tag DS) ── */
+  --stroke-sm: 1px;
+  --stroke-md: 1.5px;
+  --stroke-lg: 1.6px;
+
+  /* ── Sombras (918tag DS) ── */
+  --shadow-card: 0 2px 12px rgba(0, 0, 0, .4);
+  --shadow-lime: 0 0 16px rgba(206, 255, 0, .2);
+
+  /* ── Alias temporales de compatibilidad ──────────────────────────────────
+     Pantallas que esta rama todavía NO migró a mano (kanban/page, DetalleBici,
+     onboarding, login, etc.) siguen referenciando estos nombres viejos.
+     Acá quedan resueltos contra la paleta nueva para que no rompan visualmente
+     mientras conviven con los componentes ya migrados. Candidatos a borrar
+     el día que se migre el resto de la app a mano.
+  ───────────────────────────────────────────────────────────────────────── */
+  --bg:  var(--blue-deep);
+  --bg2: var(--blue-mid);
+  --bg3: var(--blue-surface);
+  --bg4: var(--blue-card);
+
+  --or:  var(--lime);
+  --or1: var(--lime-dim);
+  --or2: var(--lime-faint);
+
+  --r-badge: var(--r-xs);
+  --r-input: var(--r-md);
+  --r-card:  var(--r-lg);
 }
 
 html, body {
@@ -80,8 +137,8 @@ body {
 
 /* ── Selection ── */
 ::selection {
-  background: var(--or);
-  color: #111;
+  background: var(--lime);
+  color: var(--blue-deep);
 }
 
 /* ── Scrollbar (subtle) ── */
@@ -98,7 +155,7 @@ body {
 
 /* ── Focus visible ── */
 :focus-visible {
-  outline: 1px solid var(--or);
+  outline: var(--stroke-sm) solid var(--lime);
   outline-offset: 2px;
 }
 
@@ -120,17 +177,17 @@ button {
 /* ── Input reset ── */
 input, textarea, select {
   font-family: var(--f);
-  font-size: 15px;
-  background: var(--bg3);
+  font-size: var(--fs-sm);
+  background: var(--blue-input);
   color: var(--t1);
-  border: 1px solid var(--b2);
-  border-radius: var(--r-input);
+  border: var(--stroke-sm) solid var(--b2);
+  border-radius: var(--r-md);
   padding: 8px 12px;
   outline: none;
   width: 100%;
 }
 input:focus, textarea:focus, select:focus {
-  border-color: var(--or);
+  border-color: var(--lime);
 }
 input::placeholder, textarea::placeholder {
   color: var(--t4);

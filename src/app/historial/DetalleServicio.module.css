@@ -18,8 +18,8 @@
   bottom: 0;
   left: 0;
   right: 0;
-  background: var(--bg2);
-  border-radius: 12px 12px 0 0;
+  background: var(--blue-card);
+  border-radius: var(--r-xl) var(--r-xl) 0 0;
   z-index: 101;
   max-height: 90dvh;
   overflow-y: auto;
@@ -54,8 +54,8 @@
 .spinner {
   width: 20px;
   height: 20px;
-  border: 2px solid var(--b3);
-  border-top-color: var(--or);
+  border: var(--stroke-md) solid var(--b3);
+  border-top-color: var(--lime);
   border-radius: 50%;
   animation: spin .7s linear infinite;
 }
@@ -88,7 +88,7 @@
   font-size: 16px;
   color: var(--t4);
   padding: 4px 8px;
-  border-radius: var(--r-input);
+  border-radius: var(--r-md);
   transition: color .1s;
   line-height: 1;
   flex-shrink: 0;
@@ -113,9 +113,9 @@
 .biciColor {
   font-size: 12px;
   color: var(--t4);
-  background: var(--bg4);
-  border: 1px solid var(--b2);
-  border-radius: 2px;
+  background: var(--blue-input);
+  border: var(--stroke-sm) solid var(--b2);
+  border-radius: var(--r-xs);
   padding: 2px 7px;
 }
 
@@ -147,7 +147,7 @@
 .servicioPrecio {
   font-size: 15px;
   font-weight: 600;
-  color: var(--or);
+  color: var(--lime);
 }
 
 /* ── FECHAS ── */
@@ -188,13 +188,13 @@
 }
 
 .hallazgoItem {
-  background: var(--bg3);
-  border: 1px solid var(--b2);
-  border-radius: var(--r-card);
+  background: var(--blue-surface);
+  border: var(--stroke-sm) solid var(--b2);
+  border-radius: var(--r-lg);
   padding: 10px;
 }
 
-.hallazgo_aprobado  { border-color: rgba(30,200,100,.25); }
+.hallazgo_aprobado  { border-color: var(--gr2); }
 .hallazgo_rechazado { opacity: .6; }
 
 .hallazgoTop {
@@ -207,7 +207,7 @@
   width: 52px;
   height: 52px;
   object-fit: cover;
-  border-radius: var(--r-card);
+  border-radius: var(--r-md);
   flex-shrink: 0;
   cursor: pointer;
 }
@@ -222,7 +222,7 @@
 
 .hallazgoPrecio {
   font-size: 12px;
-  color: var(--or);
+  color: var(--lime);
   font-weight: 500;
   margin-top: 3px;
 }
@@ -230,7 +230,7 @@
 .hallazgoBadge {
   font-size: 11px;
   padding: 2px 7px;
-  border-radius: 2px;
+  border-radius: var(--r-xs);
   flex-shrink: 0;
   white-space: nowrap;
 }
@@ -250,7 +250,7 @@
   width: 72px;
   height: 72px;
   object-fit: cover;
-  border-radius: var(--r-card);
+  border-radius: var(--r-md);
   cursor: pointer;
 }
 
@@ -271,5 +271,5 @@
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
-  border-radius: var(--r-card);
+  border-radius: var(--r-md);
 }
