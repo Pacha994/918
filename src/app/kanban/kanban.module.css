@@ -13,8 +13,8 @@
 .loadingSpinner {
   width: 20px;
   height: 20px;
-  border: 2px solid var(--b3);
-  border-top-color: var(--or);
+  border: var(--stroke-md) solid var(--b3);
+  border-top-color: var(--lime);
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
 }
@@ -25,7 +25,7 @@
 .page {
   height: 100dvh;
   overflow: hidden;
-  background: var(--bg);
+  background: var(--blue-deep);
   display: flex;
   flex-direction: column;
 }
@@ -36,8 +36,8 @@
   align-items: center;
   justify-content: space-between;
   padding: 12px 16px;
-  background: var(--bg);
-  border-bottom: 1px solid var(--b1);
+  background: var(--blue-deep);
+  border-bottom: var(--stroke-sm) solid var(--b1);
   position: sticky;
   top: 0;
   z-index: 10;
@@ -63,7 +63,7 @@
 .logo {
   font-size: 18px;
   font-weight: 500;
-  color: var(--or);
+  color: var(--lime);
   letter-spacing: 0.04em;
   flex-shrink: 0;
 }
@@ -92,28 +92,28 @@
   color: var(--t3);
   cursor: pointer;
   padding: 8px;
-  border-radius: var(--r-input);
+  border-radius: var(--r-md);
   transition: color 0.12s, background 0.12s;
 }
 .btnConfig:hover {
   color: var(--t1);
-  background: var(--bg2);
+  background: var(--blue-mid);
 }
 
 .btnNuevo {
   font-family: var(--f);
   font-size: 14px;
   padding: 7px 16px;
-  background: var(--or);
-  color: #111;
+  background: var(--lime);
+  color: var(--blue-deep);
   border: none;
-  border-radius: var(--r-input);
+  border-radius: var(--r-md);
   cursor: pointer;
   font-weight: 500;
   transition: background 0.12s;
 }
-.btnNuevo:hover  { background: #e5551a; }
-.btnNuevo:active { background: #cc4d18; }
+.btnNuevo:hover  { background: var(--lime-hover); }
+.btnNuevo:active { background: var(--lime-hover); }
 
 /* ── EMPTY STATE ── */
 .emptyState {
@@ -136,14 +136,14 @@
   font-size: 14px;
   padding: 9px 20px;
   background: transparent;
-  color: var(--or);
-  border: 1px solid rgba(255,96,26,.4);
-  border-radius: var(--r-input);
+  color: var(--lime);
+  border: var(--stroke-sm) solid var(--lime-border);
+  border-radius: var(--r-md);
   cursor: pointer;
   margin-top: 8px;
   transition: all 0.12s;
 }
-.btnNuevoEmpty:hover { background: var(--or1); border-color: var(--or); }
+.btnNuevoEmpty:hover { background: var(--lime-faint); border-color: var(--lime); }
 
 /* ── KANBAN ── */
 .kanban {
@@ -163,7 +163,7 @@
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  border-right: 1px solid var(--b1);
+  border-right: var(--stroke-sm) solid var(--b1);
   scroll-snap-align: start;
 }
 
@@ -179,13 +179,18 @@
   align-items: center;
   justify-content: space-between;
   padding: 10px 14px;
-  border-bottom: 1px solid var(--b1);
-  background: var(--bg);
+  border-bottom: var(--stroke-sm) solid var(--b1);
+  background: var(--blue-deep);
 }
 
 .colHeader[data-color='bl'] .colLabel { color: var(--bl); }
 .colHeader[data-color='ye'] .colLabel { color: var(--ye); }
-.colHeader[data-color='or'] .colLabel { color: var(--or); }
+/* 'reparación' seguía usando el naranja como identidad propia de columna,
+   no como acento — con --lime reservado para acento primario en el resto
+   de la app, la reutilizamos acá para la columna de "trabajo en curso".
+   Es la única reasignación semántica de esta migración; a revisar si no
+   convence. */
+.colHeader[data-color='or'] .colLabel { color: var(--lime); }
 .colHeader[data-color='gr'] .colLabel { color: var(--gr); }
 .colHeader[data-color='re'] .colLabel { color: var(--re); }
 
@@ -199,9 +204,9 @@
 .colCount {
   font-size: 12px;
   color: var(--t4);
-  background: var(--bg2);
-  border: 1px solid var(--b2);
-  border-radius: 10px;
+  background: var(--blue-mid);
+  border: var(--stroke-sm) solid var(--b2);
+  border-radius: var(--r-full);
   padding: 1px 7px;
 }
 
@@ -237,9 +242,9 @@
 }
 
 .colCardsDropTarget {
-  background: rgba(255, 96, 26, 0.05);
-  border-radius: var(--r-card);
-  outline: 1px dashed rgba(255, 96, 26, 0.4);
+  background: var(--lime-faint);
+  border-radius: var(--r-lg);
+  outline: var(--stroke-sm) dashed var(--lime-border);
   outline-offset: -2px;
 }
 
@@ -251,8 +256,8 @@
 
 .skeletonCard {
   height: 88px;
-  border-radius: var(--r-card);
-  background: linear-gradient(90deg, var(--bg2) 25%, var(--bg3) 50%, var(--bg2) 75%);
+  border-radius: var(--r-lg);
+  background: linear-gradient(90deg, var(--blue-mid) 25%, var(--blue-surface) 50%, var(--blue-mid) 75%);
   background-size: 800px 100%;
   animation: shimmer 1.4s infinite linear;
 }
@@ -260,8 +265,8 @@
 .skeletonLabel {
   height: 10px;
   width: 64px;
-  border-radius: 2px;
-  background: linear-gradient(90deg, var(--bg3) 25%, var(--bg4) 50%, var(--bg3) 75%);
+  border-radius: var(--r-xs);
+  background: linear-gradient(90deg, var(--blue-surface) 25%, var(--blue-card) 50%, var(--blue-surface) 75%);
   background-size: 800px 100%;
   animation: shimmer 1.4s infinite linear;
 }
@@ -269,8 +274,8 @@
 .skeletonCount {
   height: 18px;
   width: 24px;
-  border-radius: 10px;
-  background: linear-gradient(90deg, var(--bg3) 25%, var(--bg4) 50%, var(--bg3) 75%);
+  border-radius: var(--r-full);
+  background: linear-gradient(90deg, var(--blue-surface) 25%, var(--blue-card) 50%, var(--blue-surface) 75%);
   background-size: 800px 100%;
   animation: shimmer 1.4s infinite linear;
 }

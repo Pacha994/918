@@ -1,7 +1,7 @@
 /* ── PAGE ── */
 .page {
   min-height: 100dvh;
-  background: var(--bg);
+  background: var(--blue-deep);
   display: flex;
   flex-direction: column;
 }
@@ -11,8 +11,8 @@
   display: flex;
   align-items: center;
   padding: 12px 16px;
-  background: var(--bg);
-  border-bottom: 1px solid var(--b1);
+  background: var(--blue-deep);
+  border-bottom: var(--stroke-sm) solid var(--b1);
   position: sticky;
   top: 0;
   z-index: 10;
@@ -30,12 +30,12 @@
   color: var(--t3);
   cursor: pointer;
   padding: 8px;
-  border-radius: var(--r-input);
+  border-radius: var(--r-md);
   transition: color .12s, background .12s;
   flex-shrink: 0;
   margin-left: -8px;
 }
-.btnAtras:hover { color: var(--t1); background: var(--bg2); }
+.btnAtras:hover { color: var(--t1); background: var(--blue-mid); }
 
 .titulo {
   font-size: 17px;
@@ -48,7 +48,7 @@
 /* ── MÉTRICAS ── */
 .seccionMetricas {
   padding: 16px 16px 0;
-  border-bottom: 1px solid var(--b1);
+  border-bottom: var(--stroke-sm) solid var(--b1);
   padding-bottom: 16px;
 }
 
@@ -67,9 +67,9 @@
 }
 
 .metricCard {
-  background: var(--bg2);
-  border: 1px solid var(--b2);
-  border-radius: var(--r-card);
+  background: var(--blue-mid);
+  border: var(--stroke-sm) solid var(--b2);
+  border-radius: var(--r-lg);
   padding: 12px 10px 10px;
   display: flex;
   flex-direction: column;
@@ -80,7 +80,7 @@
 }
 
 .metricCardActivo {
-  background: var(--bg3);
+  background: var(--blue-surface);
   border-color: var(--b3);
 }
 
@@ -98,7 +98,7 @@
   border-radius: 4px;
   transition: color .1s, background .1s;
 }
-.metricInfoBtn:hover { color: var(--t2); background: var(--bg3); }
+.metricInfoBtn:hover { color: var(--t2); background: var(--blue-surface); }
 
 .metricValor {
   font-size: 20px;
@@ -120,8 +120,8 @@
 .metricSkeleton {
   height: 24px;
   width: 60%;
-  border-radius: 2px;
-  background: linear-gradient(90deg, var(--bg3) 25%, var(--bg4) 50%, var(--bg3) 75%);
+  border-radius: var(--r-xs);
+  background: linear-gradient(90deg, var(--blue-surface) 25%, var(--blue-card) 50%, var(--blue-surface) 75%);
   background-size: 800px 100%;
   animation: shimmer 1.4s infinite linear;
   margin-bottom: 4px;
@@ -133,9 +133,9 @@
   color: var(--t3);
   line-height: 1.4;
   padding: 8px 10px;
-  background: var(--bg3);
-  border: 1px solid var(--b2);
-  border-radius: var(--r-input);
+  background: var(--blue-surface);
+  border: var(--stroke-sm) solid var(--b2);
+  border-radius: var(--r-md);
   animation: fadeIn .12s ease;
 }
 
@@ -168,10 +168,10 @@
   padding: 12px 16px;
   position: sticky;
   top: 53px;
-  background: #1e1e1e;
+  background: var(--blue-surface);
   z-index: 5;
-  border-top: 1px solid var(--b2);
-  border-bottom: 1px solid var(--b2);
+  border-top: var(--stroke-sm) solid var(--b2);
+  border-bottom: var(--stroke-sm) solid var(--b2);
 }
 
 .mesLabel {
@@ -185,10 +185,10 @@
 .mesCount {
   font-size: 11px;
   font-weight: 500;
-  color: var(--or);
-  background: rgba(255, 96, 26, .12);
-  border: 1px solid rgba(255, 96, 26, .3);
-  border-radius: 10px;
+  color: var(--lime);
+  background: var(--lime-dim);
+  border: var(--stroke-sm) solid var(--lime-border);
+  border-radius: var(--r-full);
   padding: 2px 8px;
 }
 
@@ -199,13 +199,13 @@
   align-items: center;
   gap: 8px;
   padding: 12px 16px;
-  border-bottom: 1px solid var(--b1);
+  border-bottom: var(--stroke-sm) solid var(--b1);
   width: 100%;
   text-align: left;
   transition: background .08s;
 }
 .item:last-child { border-bottom: none; }
-.item:active { background: var(--bg2); }
+.item:active { background: var(--blue-mid); }
 
 .itemFirst {
   padding-top: 14px;
@@ -272,7 +272,7 @@
 
 .itemPrecio {
   font-size: 12px;
-  color: var(--or);
+  color: var(--lime);
   font-weight: 500;
 }
 
@@ -285,8 +285,8 @@
 .skeletonItem {
   height: 66px;
   margin: 0 16px;
-  border-radius: var(--r-card);
-  background: linear-gradient(90deg, var(--bg2) 25%, var(--bg3) 50%, var(--bg2) 75%);
+  border-radius: var(--r-lg);
+  background: linear-gradient(90deg, var(--blue-mid) 25%, var(--blue-surface) 50%, var(--blue-mid) 75%);
   background-size: 800px 100%;
   animation: shimmer 1.4s infinite linear;
   margin-bottom: 1px;

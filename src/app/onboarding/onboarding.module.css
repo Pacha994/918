@@ -1,7 +1,7 @@
 /* ── BASE ── */
 .page {
   min-height: 100dvh;
-  background: var(--bg);
+  background: var(--blue-deep);
   display: flex;
   flex-direction: column;
   max-width: 480px;
@@ -29,7 +29,7 @@
   font-size: 11px;
   letter-spacing: .14em;
   text-transform: uppercase;
-  color: var(--or);
+  color: var(--lime);
 }
 
 /* ── TÍTULOS ── */
@@ -43,7 +43,7 @@
   color: var(--re);
   font-size: 13px;
   padding: 8px 12px;
-  border-radius: 0 var(--r-card) var(--r-card) 0;
+  border-radius: 0 var(--r-lg) var(--r-lg) 0;
 }
 .errorFooter {
   padding: 0 24px 12px;
@@ -60,30 +60,30 @@
 .input {
   font-family: var(--f);
   font-size: 16px;
-  background: var(--bg3);
+  background: var(--blue-surface);
   color: var(--t1);
-  border: 1px solid var(--b2);
-  border-radius: var(--r-input);
+  border: var(--stroke-md) solid var(--b2);
+  border-radius: var(--r-md);
   padding: 12px 14px;
   outline: none;
   width: 100%;
   transition: border-color .1s;
   -webkit-appearance: none;
 }
-.input:focus        { border-color: var(--or); }
+.input:focus        { border-color: var(--lime); }
 .input::placeholder { color: var(--t4); }
 
 /* ── WHATSAPP INPUT ── */
 .waWrap {
   display: flex;
   align-items: center;
-  background: var(--bg3);
-  border: 1px solid var(--b2);
-  border-radius: var(--r-input);
+  background: var(--blue-surface);
+  border: var(--stroke-md) solid var(--b2);
+  border-radius: var(--r-md);
   overflow: hidden;
   transition: border-color .1s;
 }
-.waWrap:focus-within { border-color: var(--or); }
+.waWrap:focus-within { border-color: var(--lime); }
 .waPrefijo {
   padding: 12px 0 12px 14px;
   font-size: 16px;
@@ -117,37 +117,37 @@
   font-weight: 500;
   width: 56px; height: 64px;
   text-align: center;
-  background: var(--bg3);
+  background: var(--blue-surface);
   color: var(--t1);
-  border: 1px solid var(--b2);
-  border-radius: var(--r-input);
+  border: var(--stroke-md) solid var(--b2);
+  border-radius: var(--r-md);
   outline: none;
   transition: border-color .1s;
   -webkit-appearance: none;
 }
-.codigoInput:focus { border-color: var(--or); }
+.codigoInput:focus { border-color: var(--lime); }
 
 .verificarNota {
   font-size: 13px;
   color: var(--t4);
   line-height: 1.5;
   padding: 12px 14px;
-  background: var(--bg3);
-  border: 1px solid var(--b2);
-  border-radius: var(--r-card);
+  background: var(--blue-surface);
+  border: var(--stroke-sm) solid var(--b2);
+  border-radius: var(--r-lg);
 }
 
 /* ── PRECIO ── */
 .precioWrap {
   display: flex;
   align-items: center;
-  background: var(--bg3);
-  border: 1px solid var(--b2);
-  border-radius: var(--r-input);
+  background: var(--blue-surface);
+  border: var(--stroke-md) solid var(--b2);
+  border-radius: var(--r-md);
   overflow: hidden;
   transition: border-color .1s;
 }
-.precioWrap:focus-within { border-color: var(--or); }
+.precioWrap:focus-within { border-color: var(--lime); }
 .precioPrefijo {
   padding: 12px 0 12px 14px;
   font-size: 16px;
@@ -157,7 +157,7 @@
   font-family: var(--f);
   font-size: 22px;
   font-weight: 500;
-  color: var(--or);
+  color: var(--lime);
   background: transparent;
   border: none;
   outline: none;
@@ -174,9 +174,9 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
-  background: var(--bg3);
-  border: 1px solid var(--b2);
-  border-radius: var(--r-card);
+  background: var(--blue-surface);
+  border: var(--stroke-sm) solid var(--b2);
+  border-radius: var(--r-lg);
   overflow: hidden;
 }
 .itemRow {
@@ -185,15 +185,15 @@
   gap: 12px;
   padding: 11px 14px;
   cursor: pointer;
-  border-bottom: 1px solid var(--b1);
+  border-bottom: var(--stroke-sm) solid var(--b1);
   transition: background .1s;
 }
 .itemRow:last-of-type { border-bottom: none; }
-.itemRow:hover        { background: var(--bg4); }
+.itemRow:hover        { background: var(--blue-card); }
 
 .itemCheck {
   width: 16px; height: 16px;
-  accent-color: var(--or);
+  accent-color: var(--lime);
   flex-shrink: 0;
   cursor: pointer;
 }
@@ -206,14 +206,14 @@
   color: var(--t4);
   background: transparent;
   border: none;
-  border-top: 1px solid var(--b1);
+  border-top: var(--stroke-sm) solid var(--b1);
   padding: 11px 14px;
   cursor: pointer;
   text-align: left;
   transition: color .1s;
   width: 100%;
 }
-.btnAgregarItem:hover { color: var(--or); }
+.btnAgregarItem:hover { color: var(--lime); }
 
 /* ── FOOTER ── */
 .footer {
@@ -221,24 +221,24 @@
   gap: 10px;
   padding: 16px 24px;
   padding-bottom: calc(16px + env(safe-area-inset-bottom, 0));
-  border-top: 1px solid var(--b1);
-  background: var(--bg);
+  border-top: var(--stroke-sm) solid var(--b1);
+  background: var(--blue-deep);
 }
 
 .btnPrimario {
   font-family: var(--f);
   font-size: 16px;
   padding: 14px 24px;
-  background: var(--or);
-  color: #111;
+  background: var(--lime);
+  color: var(--blue-deep);
   border: none;
-  border-radius: var(--r-input);
+  border-radius: var(--r-md);
   cursor: pointer;
   font-weight: 500;
   flex: 1;
   transition: background .12s;
 }
-.btnPrimario:hover    { background: #e5551a; }
+.btnPrimario:hover    { background: var(--lime-hover); }
 .btnPrimario:disabled { opacity: .5; cursor: not-allowed; }
 
 .btnSecundario {
@@ -247,8 +247,8 @@
   padding: 14px 16px;
   background: transparent;
   color: var(--t3);
-  border: 1px solid var(--b2);
-  border-radius: var(--r-input);
+  border: var(--stroke-sm) solid var(--b2);
+  border-radius: var(--r-md);
   cursor: pointer;
   transition: all .1s;
   white-space: nowrap;
@@ -260,15 +260,15 @@
   font-size: 16px;
   padding: 14px 24px;
   background: var(--gr);
-  color: #111;
+  color: var(--blue-deep);
   border: none;
-  border-radius: var(--r-input);
+  border-radius: var(--r-md);
   cursor: pointer;
   font-weight: 500;
   flex: 1;
-  transition: background .12s;
+  transition: opacity .12s;
 }
-.btnRegistrar:hover { background: #18b058; }
+.btnRegistrar:hover { opacity: .85; }
 
 /* ── BIENVENIDA ── */
 .bienvenidaCuerpo {
@@ -284,7 +284,7 @@
 .logo918 {
   font-size: 48px;
   font-weight: 300;
-  color: var(--or);
+  color: var(--lime);
   letter-spacing: -.02em;
   line-height: 1;
 }
@@ -305,7 +305,7 @@
 .listoCheck {
   width: 64px; height: 64px;
   background: var(--gr1);
-  border: 1px solid rgba(30,200,100,.3);
+  border: var(--stroke-sm) solid var(--gr2);
   border-radius: 50%;
   display: flex;
   align-items: center;

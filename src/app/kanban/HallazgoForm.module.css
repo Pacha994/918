@@ -13,9 +13,9 @@
   bottom: 0; left: 0; right: 0;
   max-width: 480px;
   margin: 0 auto;
-  background: var(--bg2);
-  border-radius: 10px 10px 0 0;
-  border-top: 1px solid var(--b2);
+  background: var(--blue-mid);
+  border-radius: var(--r-xl) var(--r-xl) 0 0;
+  border-top: var(--stroke-sm) solid var(--b2);
   z-index: 61;
   max-height: 90dvh;
   display: flex;
@@ -41,7 +41,7 @@
 /* ── HEADER ── */
 .header {
   padding: 12px 16px 14px;
-  border-bottom: 1px solid var(--b1);
+  border-bottom: var(--stroke-sm) solid var(--b1);
   flex-shrink: 0;
 }
 .titulo    { font-size: 17px; color: var(--t1); font-weight: 500; }
@@ -64,7 +64,7 @@
   color: var(--re);
   font-size: 13px;
   padding: 8px 12px;
-  border-radius: 0 var(--r-card) var(--r-card) 0;
+  border-radius: 0 var(--r-lg) var(--r-lg) 0;
 }
 
 /* ── CAMPOS ── */
@@ -74,10 +74,10 @@
 .textarea {
   font-family: var(--f);
   font-size: 15px;
-  background: var(--bg3);
+  background: var(--blue-surface);
   color: var(--t1);
-  border: 1px solid var(--b2);
-  border-radius: var(--r-input);
+  border: var(--stroke-md) solid var(--b2);
+  border-radius: var(--r-md);
   padding: 10px 12px;
   outline: none;
   resize: vertical;
@@ -85,7 +85,7 @@
   transition: border-color .1s;
   -webkit-appearance: none;
 }
-.textarea:focus       { border-color: var(--or); }
+.textarea:focus       { border-color: var(--lime); }
 .textarea::placeholder { color: var(--t4); }
 
 /* ── FOTO ── */
@@ -96,16 +96,16 @@
   justify-content: center;
   gap: 8px;
   padding: 14px;
-  background: var(--bg3);
-  border: 1px dashed var(--b3);
-  border-radius: var(--r-card);
+  background: var(--blue-surface);
+  border: var(--stroke-sm) dashed var(--b3);
+  border-radius: var(--r-lg);
   color: var(--t3);
   font-size: 14px;
   cursor: pointer;
   transition: all .1s;
   width: 100%;
 }
-.btnFoto:hover { border-color: var(--or); color: var(--or); }
+.btnFoto:hover { border-color: var(--lime); color: var(--lime); }
 .btnFotoIcon   { font-size: 20px; }
 
 .fotoPreview {
@@ -117,16 +117,16 @@
   width: 100%;
   max-height: 180px;
   object-fit: cover;
-  border-radius: var(--r-card);
-  border: 1px solid var(--b2);
+  border-radius: var(--r-lg);
+  border: var(--stroke-sm) solid var(--b2);
 }
 .btnQuitarFoto {
   font-family: var(--f);
   font-size: 12px;
   color: var(--t4);
   background: transparent;
-  border: 1px solid var(--b2);
-  border-radius: var(--r-input);
+  border: var(--stroke-sm) solid var(--b2);
+  border-radius: var(--r-md);
   padding: 5px 10px;
   cursor: pointer;
   align-self: flex-start;
@@ -138,13 +138,13 @@
 .precioWrap {
   display: flex;
   align-items: center;
-  background: var(--bg3);
-  border: 1px solid var(--b2);
-  border-radius: var(--r-input);
+  background: var(--blue-surface);
+  border: var(--stroke-md) solid var(--b2);
+  border-radius: var(--r-md);
   overflow: hidden;
   transition: border-color .1s;
 }
-.precioWrap:focus-within { border-color: var(--or); }
+.precioWrap:focus-within { border-color: var(--lime); }
 .precioPrefijo {
   padding: 10px 0 10px 12px;
   font-size: 15px;
@@ -167,17 +167,17 @@
 
 /* ── WA PREVIEW ── */
 .waPreview {
-  background: var(--bg3);
-  border: 1px solid var(--b2);
-  border-left: 3px solid var(--or);
-  border-radius: 0 var(--r-card) var(--r-card) 0;
+  background: var(--blue-surface);
+  border: var(--stroke-sm) solid var(--b2);
+  border-left: 3px solid var(--lime);
+  border-radius: 0 var(--r-lg) var(--r-lg) 0;
   padding: 12px 14px;
 }
 .waLabel {
   font-size: 10px;
   letter-spacing: .12em;
   text-transform: uppercase;
-  color: var(--or);
+  color: var(--lime);
   margin-bottom: 8px;
 }
 .waMensaje {
@@ -186,14 +186,14 @@
   line-height: 1.6;
   white-space: pre-wrap;
 }
-.waPrecio { color: var(--or); font-weight: 500; }
+.waPrecio { color: var(--lime); font-weight: 500; }
 
 /* ── FOOTER ── */
 .footer {
   display: flex;
   gap: 10px;
   padding: 12px 16px;
-  border-top: 1px solid var(--b1);
+  border-top: var(--stroke-sm) solid var(--b1);
   flex-shrink: 0;
 }
 .btnCancelar {
@@ -202,8 +202,8 @@
   padding: 10px 16px;
   background: transparent;
   color: var(--t3);
-  border: 1px solid var(--b2);
-  border-radius: var(--r-input);
+  border: var(--stroke-sm) solid var(--b2);
+  border-radius: var(--r-md);
   cursor: pointer;
   transition: all .1s;
 }
@@ -212,14 +212,14 @@
   font-family: var(--f);
   font-size: 14px;
   padding: 10px 20px;
-  background: var(--or);
-  color: #111;
+  background: var(--lime);
+  color: var(--blue-deep);
   border: none;
-  border-radius: var(--r-input);
+  border-radius: var(--r-md);
   cursor: pointer;
   font-weight: 500;
   margin-left: auto;
   transition: background .12s;
 }
-.btnEnviar:hover    { background: #e5551a; }
+.btnEnviar:hover    { background: var(--lime-hover); }
 .btnEnviar:disabled { opacity: .5; cursor: not-allowed; }

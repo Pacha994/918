@@ -2,7 +2,7 @@
   max-width: 390px;
   margin: 0 auto;
   min-height: 100dvh;
-  background: var(--bg);
+  background: var(--blue-deep);
   display: flex;
   flex-direction: column;
 }
@@ -12,7 +12,7 @@
   align-items: center;
   padding: 14px 16px 10px;
   gap: 8px;
-  border-bottom: 1px solid var(--b1);
+  border-bottom: var(--stroke-sm) solid var(--b1);
 }
 
 .titulo {
@@ -32,10 +32,10 @@
   font-size: 13px;
   font-weight: 500;
   padding: 5px 12px;
-  border-radius: var(--r-input);
+  border-radius: var(--r-md);
   border: none;
-  background: var(--or);
-  color: #111;
+  background: var(--lime);
+  color: var(--blue-deep);
   cursor: pointer;
 }
 
@@ -45,7 +45,7 @@
   padding: 10px 16px;
   overflow-x: auto;
   scrollbar-width: none;
-  border-bottom: 1px solid var(--b1);
+  border-bottom: var(--stroke-sm) solid var(--b1);
 }
 
 .pills::-webkit-scrollbar { display: none; }
@@ -54,8 +54,8 @@
   font-family: var(--f);
   font-size: 13px;
   padding: 5px 12px;
-  border-radius: 20px;
-  border: 1px solid var(--b3);
+  border-radius: var(--r-full);
+  border: var(--stroke-sm) solid var(--b3);
   background: transparent;
   color: var(--t3);
   cursor: pointer;
@@ -64,9 +64,9 @@
 }
 
 .pillActive {
-  background: var(--or);
-  border-color: var(--or);
-  color: #111;
+  background: var(--lime);
+  border-color: var(--lime);
+  color: var(--blue-deep);
   font-weight: 500;
 }
 

@@ -1,6 +1,6 @@
 .page {
   min-height: 100dvh;
-  background: var(--bg);
+  background: var(--blue-deep);
   display: flex;
   flex-direction: column;
   max-width: 480px;
@@ -19,7 +19,7 @@
 .logo {
   font-size: 40px;
   font-weight: 300;
-  color: var(--or);
+  color: var(--lime);
   letter-spacing: -.02em;
   line-height: 1;
   margin-bottom: 8px;
@@ -34,7 +34,7 @@
   color: var(--re);
   font-size: 13px;
   padding: 8px 12px;
-  border-radius: 0 var(--r-card) var(--r-card) 0;
+  border-radius: 0 var(--r-lg) var(--r-lg) 0;
 }
 
 .campo { display: flex; flex-direction: column; gap: 8px; }
@@ -43,13 +43,13 @@
 .waWrap {
   display: flex;
   align-items: center;
-  background: var(--bg3);
-  border: 1px solid var(--b2);
-  border-radius: var(--r-input);
+  background: var(--blue-surface);
+  border: var(--stroke-md) solid var(--b2);
+  border-radius: var(--r-md);
   overflow: hidden;
   transition: border-color .1s;
 }
-.waWrap:focus-within { border-color: var(--or); }
+.waWrap:focus-within { border-color: var(--lime); }
 
 .waPrefijo {
   padding: 12px 0 12px 14px;
@@ -78,23 +78,23 @@
   gap: 10px;
   padding: 16px 24px;
   padding-bottom: calc(16px + env(safe-area-inset-bottom, 0));
-  border-top: 1px solid var(--b1);
-  background: var(--bg);
+  border-top: var(--stroke-sm) solid var(--b1);
+  background: var(--blue-deep);
 }
 
 .btnPrimario {
   font-family: var(--f);
   font-size: 16px;
   padding: 14px 24px;
-  background: var(--or);
-  color: #111;
+  background: var(--lime);
+  color: var(--blue-deep);
   border: none;
-  border-radius: var(--r-input);
+  border-radius: var(--r-md);
   cursor: pointer;
   font-weight: 500;
   transition: background .12s;
 }
-.btnPrimario:hover    { background: #e5551a; }
+.btnPrimario:hover    { background: var(--lime-hover); }
 .btnPrimario:disabled { opacity: .5; cursor: not-allowed; }
 
 .btnLink {

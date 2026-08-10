@@ -1,6 +1,6 @@
 .page {
   min-height: 100dvh;
-  background: var(--bg);
+  background: var(--blue-deep);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -12,16 +12,16 @@
   font-family: var(--f);
   font-size: 22px;
   font-weight: 700;
-  color: var(--or);
+  color: var(--lime);
   margin-bottom: 32px;
 }
 
 .card {
   width: 100%;
   max-width: 420px;
-  background: var(--bg2);
-  border: 1px solid var(--b2);
-  border-radius: var(--r-card);
+  background: var(--blue-mid);
+  border: var(--stroke-sm) solid var(--b2);
+  border-radius: var(--r-lg);
   padding: 20px;
   box-sizing: border-box;
 }
@@ -46,7 +46,7 @@
   gap: 6px;
   font-size: 12px;
   padding: 4px 10px;
-  border-radius: var(--r-badge);
+  border-radius: var(--r-xs);
   margin-bottom: 12px;
 }
 
@@ -72,8 +72,8 @@
   width: 100%;
   max-height: 240px;
   object-fit: cover;
-  border-radius: var(--r-card);
-  border: 1px solid var(--b2);
+  border-radius: var(--r-lg);
+  border: var(--stroke-sm) solid var(--b2);
   margin-bottom: 16px;
 }
 
@@ -89,8 +89,8 @@
   justify-content: space-between;
   align-items: baseline;
   padding: 12px 14px;
-  background: var(--bg3);
-  border-radius: var(--r-card);
+  background: var(--blue-surface);
+  border-radius: var(--r-lg);
   margin-bottom: 20px;
 }
 
@@ -117,9 +117,9 @@
   flex: 1;
   padding: 12px;
   background: var(--gr);
-  color: #0a1a0f;
+  color: var(--blue-deep);
   border: none;
-  border-radius: var(--r-input);
+  border-radius: var(--r-md);
   cursor: pointer;
   transition: opacity 0.12s;
 }
@@ -133,8 +133,8 @@
   padding: 12px;
   background: transparent;
   color: var(--re);
-  border: 1px solid rgba(224,80,80,.3);
-  border-radius: var(--r-input);
+  border: var(--stroke-sm) solid var(--re);
+  border-radius: var(--r-md);
   cursor: pointer;
   transition: all 0.12s;
 }
